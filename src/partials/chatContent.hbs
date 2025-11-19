@@ -1,0 +1,35 @@
+<main class="chat-app__content chat-content">
+  {{#if activeChat}}
+  <header class="chat-content__header">
+    <div class="chat-content__info">
+      <img
+        class="avatar avatar--sm"
+        src="{{ activeChat.avatar }}"
+        alt="Аватар {{ activeChat.title }}"
+      />
+      <div>
+        <h2 class="chat-content__title">{{ activeChat.title }}</h2>
+      </div>
+    </div>
+    <div class="chat-content__actions">
+      <button class="chat-content__action"><img src="/settings.svg" alt="settings" /></button>
+    </div>
+  </header>
+  <section class="chat-content__messages">
+    {{#each activeChat.messages}}
+    {{> chat-message}}
+    {{/each}}
+  </section>
+  <footer class="chat-content__footer">
+    <button class="chat-content__attach" type="button">
+      <img src="/attach.svg" alt="attach" />
+    </button>
+    <input class="chat-content__input" type="text" placeholder="Сообщение" />
+    <button class="chat-content__send" type="button"><img src="/send.svg" alt="send" /></button>
+  </footer>
+  {{else}}
+  <div class="chat-content__empty">
+    <p>Выберите чат, чтобы начать переписку</p>
+  </div>
+  {{/if}}
+</main>

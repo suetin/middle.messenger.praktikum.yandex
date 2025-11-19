@@ -1,0 +1,9 @@
+<article class="message {{#if isOwn}}message--right{{else}}message--left{{/if}}">
+  {{#if image}}
+  <img src="{{ image }}" alt="{{ text }}" />
+  {{/if}}
+  {{#if text}}
+  <p class="message__text">{{ text }}</p>
+  {{/if}}
+  <span class="message__meta">{{ time }}</span>
+</article>

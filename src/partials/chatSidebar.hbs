@@ -1,0 +1,17 @@
+<aside class="chat-app__sidebar sidebar-chat-app">
+  <header class="sidebar-chat-app__header">
+    <div class="sidebar-chat-app__profile-btn-wrapper">
+      <button class="sidebar-chat-app__profile-btn">
+        <span>Профиль</span><img src="/arrow-right.svg" alt="arrow right" />
+      </button>
+    </div>
+    <label class="sidebar-chat-app__search-field">
+      <input class="sidebar-chat-app__search-input" type="search" placeholder="Поиск" />
+    </label>
+  </header>
+  <ul class="chat-list">
+    {{#each chats}}
+    {{> chat-sidebar-item}}
+    {{/each}}
+  </ul>
+</aside>
