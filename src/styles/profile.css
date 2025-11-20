@@ -24,13 +24,16 @@
   font-weight: 600;
 }
 
-.profile__value {
+input.profile__value {
   color: #999;
   max-width: 60%;
   text-align: right;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  background-color: transparent;
+  border-color: transparent;
+  padding-right: 0;
 }
 
 .profile__top {

@@ -1,12 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
 :root {
   --chat-accent: #3369f3;
+  --chat-accent-lighten-10: #4473eb;
   --chat-border-grey: #eaeaea;
   --chat-text-grey: #999999;
   --chat-text-black: #1e1e1e;
   --chat-link: #3369f3;
   --chat-link-hover: #4071eb;
 
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 
@@ -48,15 +51,17 @@ h1 {
 }
 
 button {
+  border-color: transparent;
+}
+
+.button {
   border-radius: 8px;
   border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
+  padding: 10px 10px;
+  font-size: 13px;
+  background-color: var(--chat-accent);
   cursor: pointer;
-  transition: border-color 0.25s;
+  color: #fff;
 }
 .button--link {
   background-color: transparent;
@@ -72,6 +77,9 @@ button:focus-visible {
 }
 .button--red {
   color: #ff0000;
+}
+.button--full {
+  width: 100%;
 }
 
 @media (prefers-color-scheme: light) {
@@ -152,12 +160,83 @@ input[type='password'] {
   height: 20px;
   background-color: var(--chat-accent);
   transform: rotate(180deg);
-  width: 28px;
-  height: 28px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
+}
+
+.back-to__btn:hover {
+  background-color: var(--chat-accent-lighten-10);
 }
 
 .chat-app__back-to-wrapper {
   display: flex;
   height: 100%;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  font-family: sans-serif;
+}
+
+.input-group label {
+  font-size: 12px;
+  color: var(--chat-text-grey);
+}
+
+.input-group input {
+  border: none;
+  outline: none;
+  font-size: 14px;
+  padding: 6px 0;
+  background-color: transparent;
+}
+
+.input-group .underline {
+  display: block;
+  height: 1px;
+  width: 100%;
+  background: var(--chat-accent);
+}
+
+.form__input-group-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form {
+  border-radius: 12px;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.14);
+  width: 340px;
+  margin: auto;
+  padding: 30px;
+}
+
+.form__title {
+  text-align: center;
+}
+
+.content-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.login-page-form > .form__input-group-wrapper {
+  padding-bottom: 150px;
+}
+
+.register-page-form > .form__input-group-wrapper {
+  padding-bottom: 50px;
+}
+
+.hidden {
+  display: none;
 }

@@ -1,8 +1,8 @@
 import '../styles/style.css';
 import Handlebars from 'handlebars';
-import loginLayoutTemplate from '../layout/login.hbs?raw';
+import registerLayoutTemplate from '../layout/register.hbs?raw';
 
-const template = Handlebars.compile(loginLayoutTemplate);
+const template = Handlebars.compile(registerLayoutTemplate);
 
 const appEl = document.getElementById('app');
 if (appEl) {
