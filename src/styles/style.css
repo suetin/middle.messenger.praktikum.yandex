@@ -8,6 +8,15 @@
   --chat-text-black: #1e1e1e;
   --chat-link: #3369f3;
   --chat-link-hover: #4071eb;
+  --chat-white: #ffffff;
+  --chat-white-soft: #fbfbfb;
+  --chat-input-bg: #efefef;
+  --chat-button-hover-border: #646cff;
+  --chat-danger: #ff0000;
+  --chat-base-dark: #213547;
+  --chat-link-hover-light: #747bff;
+  --chat-button-bg-light: #f9f9f9;
+  --chat-shadow: rgba(0, 0, 0, 0.14);
 
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -61,7 +70,7 @@ button {
   font-size: 13px;
   background-color: var(--chat-accent);
   cursor: pointer;
-  color: #fff;
+  color: var(--chat-white);
 }
 .button--link {
   background-color: transparent;
@@ -69,14 +78,14 @@ button {
   color: var(--chat-link);
 }
 button:hover {
-  border-color: #646cff;
+  border-color: var(--chat-button-hover-border);
 }
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 .button--red {
-  color: #ff0000;
+  color: var(--chat-danger);
 }
 .button--full {
   width: 100%;
@@ -85,14 +94,14 @@ button:focus-visible {
 @media (prefers-color-scheme: light) {
   /* TODO: Подумать над темной темой */
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    color: var(--chat-base-dark);
+    background-color: var(--chat-white);
   }
   a:hover {
-    color: #747bff;
+    color: var(--chat-link-hover-light);
   }
   button {
-    background-color: #f9f9f9;
+    background-color: var(--chat-button-bg-light);
   }
 }
 
@@ -116,7 +125,7 @@ input[type='number'],
 input[type='search'],
 input[type='password'] {
   padding: 8px 16px;
-  background-color: #efefef;
+  background-color: var(--chat-input-bg);
   border-radius: 30px;
   border: 1px solid var(--chat-border-grey);
   font-size: 12px;
@@ -144,7 +153,7 @@ input[type='password'] {
 }
 
 .back-to {
-  background-color: #fbfbfb;
+  background-color: var(--chat-white-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -208,7 +217,7 @@ input[type='password'] {
 
 .form {
   border-radius: 12px;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 0 6px var(--chat-shadow);
   width: 340px;
   margin: auto;
   padding: 30px;
