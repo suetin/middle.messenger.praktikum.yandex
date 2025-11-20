@@ -20,6 +20,10 @@
   padding: 10px;
 }
 
+.sidebar-chat-app__search-form {
+  margin: 0;
+}
+
 .sidebar-chat-app__profile-btn {
   display: flex;
   gap: 8px;
@@ -40,6 +44,7 @@
 }
 
 .sidebar-chat-app__search-field {
+  display: block;
   position: relative;
 }
 
@@ -225,6 +230,14 @@ input.sidebar-chat-app__search-input {
   padding: 11px 0;
   border-top: 1px solid var(--chat-border-grey);
   background-color: #ffffff;
+}
+
+.chat-content__form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
 }
 
 .chat-content__attach {

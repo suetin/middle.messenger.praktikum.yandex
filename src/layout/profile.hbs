@@ -1,11 +1,28 @@
-<div class="chat-app__back-to-wrapper">
+<main class="chat-app__back-to-wrapper">
   {{> back-to}}
   <div class="chat-app__profile profile">
     <div class="profile__top">
-      <img class="avatar avatar--lg" src="{{ avatar }}" alt="Аватар {{ name }}" />
+      <button class="js-avatar-open-form">
+        <img
+          title="Сменить аватар"
+          class="avatar avatar--lg"
+          src="{{ avatar }}"
+          alt="Аватар {{ name }}"
+        />
+      </button>
       <h2 class="profile__name">{{ name }}</h2>
     </div>
-    <ul class="profile__list">
+
+    <ul class="profile__list js-profile-info">
+      {{#each fields}}
+      <li class="profile__row">
+        <span class="profile__label">{{ label }}</span>
+        <span class="profile__value">{{ value }}</span>
+      </li>
+      {{/each}}
+    </ul>
+
+    <ul class="profile__list js-profile-info-edit hidden">
       {{#each fields}}
       <li class="profile__row">
         <span class="profile__label">{{ label }}</span>
@@ -13,20 +30,27 @@
       </li>
       {{/each}}
     </ul>
+
+    <ul class="profile__list js-profile-password-edit hidden">
+      {{#each fieldsPassword}}
+      <li class="profile__row">
+        <span class="profile__label">{{ label }}</span>
+        <input type="{{ type }}" class="profile__value" value="{{ value }}" />
+      </li>
+      {{/each}}
+    </ul>
+
     <ul class="profile__list profile__list--actions">
       <li class="profile__row">
-        <button class="button--link">Изменить данные</button>
+        <button class="button--link js-profile-edit-btn">Изменить данные</button>
       </li>
       <li class="profile__row">
-        <button class="button--link">Изменить пароль</button>
+        <button class="button--link js-profile-password-btn">Изменить пароль</button>
       </li>
       <li class="profile__row">
         <button class="button--link button--red">Выйти</button>
       </li>
     </ul>
-    <div class="hidden">
-      <input type="password" name="oldPassword" />
-      <input type="password" name="newPassword" />
-    </div>
   </div>
-</div>
+  {{> avatar-form}}
+</main>
