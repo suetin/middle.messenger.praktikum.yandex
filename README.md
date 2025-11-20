@@ -10,6 +10,15 @@
 - В рамках первого спринта сверстаны основные страницы и настроена сборка проекта.
 - Технологии: Handlebars, Vite, PostCSS, ESLint, Prettier, TypeScript
 
+#### Страницы
+
+- [Чат](https://remarkable-ganache-20b43c.netlify.app/chat.html)
+- [Профиль](https://remarkable-ganache-20b43c.netlify.app/profile.html)
+- [Авторизация](https://remarkable-ganache-20b43c.netlify.app/login.html)
+- [Регистрация](https://remarkable-ganache-20b43c.netlify.app/register.html)
+- [404](https://remarkable-ganache-20b43c.netlify.app/404.html)
+- [500](https://remarkable-ganache-20b43c.netlify.app/500.html)
+
 ## Установка
 
 Клонировать проект:

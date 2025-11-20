@@ -240,3 +240,24 @@ input[type='password'] {
 .hidden {
   display: none;
 }
+
+.error-page {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-page__code {
+  line-height: 1;
+  margin: 0;
+}
+
+.error-page__message {
+  font-size: 20px;
+}
+
+.error-page__link {
+  font-size: 11px;
+}
