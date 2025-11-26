@@ -22,23 +22,27 @@
       {{/each}}
     </ul>
 
-    <ul class="profile__list js-profile-info-edit hidden">
-      {{#each fields}}
-      <li class="profile__row">
-        <span class="profile__label">{{ label }}</span>
-        <input type="{{ type }}" class="profile__value" value="{{ value }}" />
-      </li>
-      {{/each}}
-    </ul>
+    <form>
+      <ul class="profile__list js-profile-info-edit hidden">
+        {{#each fields}}
+        <li class="profile__row">
+          <span class="profile__label">{{ label }}</span>
+          <input type="{{ type }}" name="{{ name }}" class="profile__value" value="{{ value }}" />
+        </li>
+        {{/each}}
+      </ul>
+    </form>
 
-    <ul class="profile__list js-profile-password-edit hidden">
-      {{#each fieldsPassword}}
-      <li class="profile__row">
-        <span class="profile__label">{{ label }}</span>
-        <input type="{{ type }}" class="profile__value" value="{{ value }}" />
-      </li>
-      {{/each}}
-    </ul>
+    <form>
+      <ul class="profile__list js-profile-password-edit hidden">
+        {{#each fieldsPassword}}
+        <li class="profile__row">
+          <span class="profile__label">{{ label }}</span>
+          <input type="{{ type }}" class="profile__value" value="{{ value }}" />
+        </li>
+        {{/each}}
+      </ul>
+    </form>
 
     <ul class="profile__list profile__list--actions">
       <li class="profile__row">
