@@ -3,13 +3,17 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=12"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "lint:fix": "npm run lint -- --fix",
-    "format": "prettier . --write"
+    "format": "prettier . --write",
+    "start": "npm run build && vite preview --port 3000"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

@@ -1,4 +1,4 @@
-<main class="chat-app__content chat-content">
+<section class="chat-app__content chat-content">
   {{#if activeChat}}
   <header class="chat-content__header">
     <div class="chat-content__info">
@@ -24,12 +24,14 @@
     <button class="chat-content__attach" type="button">
       <img src="/attach.svg" alt="attach" />
     </button>
-    <input class="chat-content__input" type="text" placeholder="Сообщение" />
-    <button class="chat-content__send" type="button"><img src="/send.svg" alt="send" /></button>
+    <form class="chat-content__form" aria-label="Отправка сообщения">
+      <input class="chat-content__input" type="text" placeholder="Сообщение" name="message" />
+      <button class="chat-content__send" type="submit"><img src="/send.svg" alt="send" /></button>
+    </form>
   </footer>
   {{else}}
   <div class="chat-content__empty">
     <p>Выберите чат, чтобы начать переписку</p>
   </div>
   {{/if}}
-</main>
+</section>

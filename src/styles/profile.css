@@ -15,22 +15,25 @@
 .profile__row {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 6px 0;
   border-bottom: 1px solid var(--chat-border-grey);
   font-size: 14px;
 }
-
 .profile__label {
   font-weight: 600;
 }
 
-.profile__value {
+input.profile__value {
   color: #999;
   max-width: 60%;
   text-align: right;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  background-color: transparent;
+  border-color: transparent;
+  padding-right: 0;
 }
 
 .profile__top {
@@ -51,4 +54,77 @@
 
 .profile__list .profile__row:last-child {
   border: none;
+}
+
+.avatar-modal {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+}
+
+.avatar-modal--open {
+  display: flex;
+}
+
+.avatar-modal__dialog {
+  background-color: #ffffff;
+  width: 100%;
+  max-width: 360px;
+  border-radius: 12px;
+  padding: 32px 36px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.12);
+}
+
+.avatar-form {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  align-items: center;
+  margin: 0;
+}
+
+.avatar-form__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--chat-text-black);
+}
+
+.avatar-form__file {
+  display: inline-flex;
+  justify-content: center;
+  width: 100%;
+  cursor: pointer;
+}
+
+.avatar-form__file input {
+  display: none;
+}
+
+.avatar-form__file-text {
+  color: var(--chat-link);
+  text-decoration: underline;
+  font-size: 13px;
+}
+
+.avatar-form__submit {
+  width: 100%;
+  padding: 12px 10px;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+.js-avatar-open-form {
+  background-color: transparent;
+  border-color: transparent;
+  cursor: pointer;
+}
+.js-avatar-open-form:hover {
+  border-color: transparent;
+  background-color: transparent;
 }

@@ -1,5 +1,22 @@
-<ul>
-  <li><a href='chat.html'>Чат</a></li>
-  <li><a href='profile.html'>Профиль</a></li>
-  <li><a href='auth.html'>Авторизация</a></li>
-</ul>
+<main class="content-center">
+  <form class="form form--drop-shadow login-page-form">
+    <h2 class="form__title">Вход</h2>
+
+    <div class="form__input-group-wrapper">
+      <div class="input-group">
+        <label for="login">Логин</label>
+        <input id="login" type="text" name="login" />
+        <span class="underline"></span>
+      </div>
+
+      <div class="input-group">
+        <label for="password">Пароль</label>
+        <input id="password" type="password" name="password" />
+        <span class="underline"></span>
+      </div>
+    </div>
+
+    <button type="submit" class="button button--full">Вход</button>
+    <p class="text-center"><a href="/">Нет аккаунта?</a></p>
+  </form>
+</main>

@@ -9,6 +9,7 @@ export default defineConfig({
         chat: resolve(__dirname, 'chat.html'),
         profile: resolve(__dirname, 'profile.html'),
         login: resolve(__dirname, 'login.html'),
+        register: resolve(__dirname, 'register.html'),
       },
     },
   },
