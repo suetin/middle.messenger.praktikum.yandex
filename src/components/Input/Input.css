@@ -1,0 +1,13 @@
+.input-group--error label {
+  color: var(--chat-danger);
+}
+
+.input-group--error .underline {
+  background: var(--chat-danger);
+}
+
+.input-group__error {
+  color: var(--chat-danger);
+  font-size: 12px;
+  margin-top: 4px;
+}

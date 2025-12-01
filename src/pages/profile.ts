@@ -4,10 +4,11 @@ import Handlebars from 'handlebars';
 import profileLayoutTemplate from '../layout/profile.hbs?raw';
 import backToTemplate from '../partials/backTo.hbs?raw';
 import avatarFormTemplate from '../partials/avatarForm.hbs?raw';
+import { renderWithComponents } from '../lib/render';
+import Input from '../components/Input';
 
 Handlebars.registerPartial('back-to', backToTemplate);
 Handlebars.registerPartial('avatar-form', avatarFormTemplate);
-const template = Handlebars.compile(profileLayoutTemplate);
 
 const data = {
   avatar: 'https://i.pravatar.cc/180?img=8',
@@ -29,7 +30,26 @@ const data = {
 
 const appEl = document.getElementById('app');
 if (appEl) {
-  appEl.innerHTML = template(data);
+  const inputComponents = data.fields.reduce<Record<string, Input>>((acc, field) => {
+    acc[`field-${field.name}`] = new Input({
+      label: field.label,
+      name: field.name,
+      type: field.type,
+      value: field.value,
+    });
+    return acc;
+  }, {});
+
+  data.fieldsPassword.forEach((field) => {
+    inputComponents[`field-${field.name}`] = new Input({
+      label: field.label,
+      name: field.name,
+      type: field.type,
+      value: field.value,
+    });
+  });
+
+  renderWithComponents(profileLayoutTemplate, data, inputComponents, appEl);
 }
 
 const avatarOpenForm = document.querySelector('.js-avatar-form, .js-avatar-open-form');

@@ -27,7 +27,7 @@
         {{#each fields}}
         <li class="profile__row">
           <span class="profile__label">{{ label }}</span>
-          <input type="{{ type }}" name="{{ name }}" class="profile__value" value="{{ value }}" />
+          <div data-component="field-{{ name }}"></div>
         </li>
         {{/each}}
       </ul>
@@ -38,7 +38,7 @@
         {{#each fieldsPassword}}
         <li class="profile__row">
           <span class="profile__label">{{ label }}</span>
-          <input type="{{ type }}" class="profile__value" value="{{ value }}" name="{{ name }}" />
+          <div data-component="field-{{ name }}"></div>
         </li>
         {{/each}}
       </ul>
