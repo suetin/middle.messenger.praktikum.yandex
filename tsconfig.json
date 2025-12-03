@@ -17,7 +17,8 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "noImplicitAny": true
+    "noImplicitAny": true,
+    "sourceMap": true
   },
   "include": ["src"]
 }
