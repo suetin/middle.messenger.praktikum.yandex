@@ -3,6 +3,8 @@ import registerLayoutTemplate from '../layout/register.hbs?raw';
 import { renderWithComponents } from '../lib/render';
 import Input from '../components/Input';
 import Button from '../components/Button';
+import { createHandleBlur, validateAndDisplayErrors } from '../lib/validationHandlers';
+import type { InputsMap } from '../lib/validationHandlers';
 
 const data = {
   fields: [
@@ -15,15 +17,23 @@ const data = {
   ],
 };
 
+const inputsByName: InputsMap = {};
+const handleBlur = createHandleBlur(inputsByName);
+
 const appEl = document.getElementById('app');
 if (appEl) {
   const inputComponents = data.fields.reduce<Record<string, Input>>((acc, field) => {
-    acc[`field-${field.name}`] = new Input({
+    const input = new Input({
       label: field.label,
       name: field.name,
       type: field.type,
       variant: 'underline',
+      events: {
+        focusout: handleBlur(field.name),
+      },
     });
+    inputsByName[field.name] = input;
+    acc[`field-${field.name}`] = input;
     return acc;
   }, {});
 
@@ -35,6 +45,7 @@ if (appEl) {
         event.preventDefault();
         const form = document.getElementById('register-form') as HTMLFormElement | null;
         if (!form) return;
+        if (!validateAndDisplayErrors(form, inputsByName)) return;
         const formData = new FormData(form);
         console.log('register submit', Object.fromEntries(formData.entries()));
       },

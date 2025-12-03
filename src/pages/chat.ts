@@ -9,11 +9,16 @@ import chatMessagePartial from '../partials/chatMessage.hbs?raw';
 import { renderWithComponents } from '../lib/render';
 import Input from '../components/Input';
 import Button from '../components/Button';
+import { createHandleBlur, validateAndDisplayErrors } from '../lib/validationHandlers';
+import type { InputsMap } from '../lib/validationHandlers';
 
 Handlebars.registerPartial('chat-sidebar', chatSidebarPartial);
 Handlebars.registerPartial('chat-content', chatContentPartial);
 Handlebars.registerPartial('chat-message', chatMessagePartial);
 Handlebars.registerPartial('chat-sidebar-item', chatSidebarItem);
+
+const inputsByName: InputsMap = {};
+const handleBlur = createHandleBlur(inputsByName);
 
 const templateData = {
   chats: [
@@ -93,15 +98,25 @@ if (appEl) {
     placeholder: 'Сообщение',
     variant: 'filled',
     className: 'chat-content__input',
+    events: {
+      focusout: handleBlur('message'),
+    },
   });
+  inputsByName.message = messageInput;
+
+  const chatSearch = new Input({
+    name: 'search',
+    placeholder: 'Поиск',
+    variant: 'filled',
+    icon: searchIcon,
+    events: {
+      focusout: handleBlur('search'),
+    },
+  });
+  inputsByName.search = chatSearch;
 
   const components = {
-    'chat-search': new Input({
-      name: 'search',
-      placeholder: 'Поиск',
-      variant: 'filled',
-      icon: searchIcon,
-    }),
+    'chat-search': chatSearch,
     'message-input': messageInput,
     'send-button': new Button({
       icon: '/send.svg',
@@ -110,6 +125,9 @@ if (appEl) {
       events: {
         click: (event: Event) => {
           event.preventDefault();
+          const form = document.querySelector('.chat-content__form') as HTMLFormElement | null;
+          if (!form) return;
+          if (!validateAndDisplayErrors(form, inputsByName)) return;
           console.log('send message', messageInput.value);
         },
       },
