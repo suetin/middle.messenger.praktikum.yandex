@@ -20,6 +20,9 @@
   border-bottom: 1px solid var(--chat-border-grey);
   font-size: 14px;
 }
+.profile__row:last-child {
+  border-bottom: none;
+}
 .profile__label {
   font-weight: 600;
 }

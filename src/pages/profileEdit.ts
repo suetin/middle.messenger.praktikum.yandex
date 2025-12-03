@@ -1,13 +1,15 @@
 import '../styles/style.css';
 import '../styles/profile.css';
 import Handlebars from 'handlebars';
-import profileLayoutTemplate from '../layout/profile.hbs?raw';
+import profileLayoutTemplate from '../layout/profileEdit.hbs?raw';
 import backToTemplate from '../partials/backTo.hbs?raw';
 import avatarFormTemplate from '../partials/avatarForm.hbs?raw';
+import { renderWithComponents } from '../lib/render';
+import Input from '../components/Input';
+import Button from '../components/Button';
 
 Handlebars.registerPartial('back-to', backToTemplate);
 Handlebars.registerPartial('avatar-form', avatarFormTemplate);
-const template = Handlebars.compile(profileLayoutTemplate);
 
 const data = {
   avatar: 'https://i.pravatar.cc/180?img=8',
@@ -24,7 +26,39 @@ const data = {
 
 const appEl = document.getElementById('app');
 if (appEl) {
-  appEl.innerHTML = template(data);
+  const inputComponents = data.fields.reduce<Record<string, Input>>((acc, field) => {
+    acc[`field-${field.name}`] = new Input({
+      label: field.label,
+      name: field.name,
+      type: field.type,
+      value: field.value,
+      variant: 'underline',
+    });
+    return acc;
+  }, {});
+
+  const saveProfileButton = new Button({
+    text: 'Сохранить',
+    events: {
+      click: (event: Event) => {
+        event.preventDefault();
+        const form = document.getElementById('profile-form') as HTMLFormElement | null;
+        if (!form) return;
+        const formData = new FormData(form);
+        console.log('profile save', Object.fromEntries(formData.entries()));
+      },
+    },
+  });
+
+  renderWithComponents(
+    profileLayoutTemplate,
+    data,
+    {
+      ...inputComponents,
+      'save-profile-button': saveProfileButton,
+    },
+    appEl,
+  );
 }
 
 const avatarOpenForm = document.querySelector('.js-avatar-form, .js-avatar-open-form');

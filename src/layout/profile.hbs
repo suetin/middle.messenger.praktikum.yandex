@@ -1,4 +1,4 @@
-<main class="chat-app__back-to-wrapper">
+<main class="chat-app">
   {{> back-to}}
   <div class="chat-app__profile profile">
     <div class="profile__top">
@@ -13,7 +13,7 @@
       <h2 class="profile__name">{{ name }}</h2>
     </div>
 
-    <ul class="profile__list js-profile-info">
+    <ul class="profile__list">
       {{#each fields}}
       <li class="profile__row">
         <span class="profile__label">{{ label }}</span>
@@ -22,37 +22,15 @@
       {{/each}}
     </ul>
 
-    <form>
-      <ul class="profile__list js-profile-info-edit hidden">
-        {{#each fields}}
-        <li class="profile__row">
-          <span class="profile__label">{{ label }}</span>
-          <div data-component="field-{{ name }}"></div>
-        </li>
-        {{/each}}
-      </ul>
-    </form>
-
-    <form>
-      <ul class="profile__list js-profile-password-edit hidden">
-        {{#each fieldsPassword}}
-        <li class="profile__row">
-          <span class="profile__label">{{ label }}</span>
-          <div data-component="field-{{ name }}"></div>
-        </li>
-        {{/each}}
-      </ul>
-    </form>
-
     <ul class="profile__list profile__list--actions">
       <li class="profile__row">
-        <button class="button--link js-profile-edit-btn">Изменить данные</button>
+        <a class="button--link" href="/profile-edit.html">Изменить данные</a>
       </li>
       <li class="profile__row">
-        <button class="button--link js-profile-password-btn">Изменить пароль</button>
+        <a class="button--link" href="/profile-password.html">Изменить пароль</a>
       </li>
       <li class="profile__row">
-        <button class="button--link button--red">Выйти</button>
+        <a href="/" class="text-red">Выйти</a>
       </li>
     </ul>
   </div>

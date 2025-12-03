@@ -1,22 +1,18 @@
 <main class="content-center">
-  <form class="form form--drop-shadow login-page-form">
+  <form id="login-form" class="form card">
     <h2 class="form__title">Вход</h2>
 
-    <div class="form__input-group-wrapper">
-      <div class="input-group">
-        <label for="login">Логин</label>
-        <input id="login" type="text" name="login" />
-        <span class="underline"></span>
-      </div>
+    <ul class="form__list-fields">
+      {{#each fields}}
+      <li class="form__list-fields-item">
+        <div data-component="field-{{ name }}"></div>
+      </li>
+      {{/each}}
+    </ul>
 
-      <div class="input-group">
-        <label for="password">Пароль</label>
-        <input id="password" type="password" name="password" />
-        <span class="underline"></span>
-      </div>
+    <div class="form__actions">
+      <div data-component="login-button"></div>
+      <p class="text-center text-sm"><a href="/register.html">Нет аккаунта?</a></p>
     </div>
-
-    <button type="submit" class="button button--full">Вход</button>
-    <p class="text-center"><a href="/">Нет аккаунта?</a></p>
   </form>
 </main>

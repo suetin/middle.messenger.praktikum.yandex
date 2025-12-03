@@ -1,4 +1,6 @@
+import Handlebars from 'handlebars';
 import Block from '../../lib/Block';
+import template from './Input.hbs?raw';
 
 export type InputProps = {
   label?: string;
@@ -8,7 +10,11 @@ export type InputProps = {
   placeholder?: string;
   error?: string;
   events?: Record<string, EventListener>;
+  variant?: 'filled' | 'underline';
+  icon?: string;
 };
+
+const compile = Handlebars.compile(template);
 
 export default class Input extends Block<InputProps> {
   constructor(props: InputProps) {
@@ -16,19 +22,18 @@ export default class Input extends Block<InputProps> {
   }
 
   render() {
-    const { label, name, type = 'text', value = '', placeholder = '', error } = this.props;
-    const errorClass = error ? ' input-group--error' : '';
-    const valueAttr = value ? ` value="${value}"` : '';
-    const placeholderAttr = placeholder ? ` placeholder="${placeholder}"` : '';
+    return compile(this.getViewModel());
+  }
 
-    return `
-      <div class="input-group${errorClass}">
-        ${label ? `<label for="${name}">${label}</label>` : ''}
-        <input id="${name}" name="${name}" type="${type}"${valueAttr}${placeholderAttr} />
-        <span class="underline"></span>
-        ${error ? `<span class="input-group__error">${error}</span>` : ''}
-      </div>
-    `;
+  private getViewModel() {
+    const { variant = 'underline', type, icon, ...rest } = this.props;
+    return {
+      ...rest,
+      variant,
+      isFilled: variant === 'filled',
+      inputType: type ?? 'text',
+      icon,
+    };
   }
 
   get value(): string {

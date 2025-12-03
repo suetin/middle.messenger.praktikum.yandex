@@ -1,0 +1,31 @@
+<div class="input {{#if isFilled}}input--filled{{else}}input--underline{{/if}}{{#if error}} input--error{{/if}}">
+  {{#if isFilled}}
+    {{#if icon}}
+      <span class="input__icon" aria-hidden="true">{{{icon}}}</span>
+    {{/if}}
+    <input
+      class="input__field input__field--filled"
+      id="{{name}}"
+      name="{{name}}"
+      type="{{inputType}}"
+      {{#if value}}value="{{value}}"{{/if}}
+      {{#if placeholder}}placeholder="{{placeholder}}"{{/if}}
+    />
+  {{else}}
+    {{#if label}}
+      <label class="input__label" for="{{name}}">{{label}}</label>
+    {{/if}}
+    <input
+      class="input__field input__field--underline"
+      id="{{name}}"
+      name="{{name}}"
+      type="{{inputType}}"
+      {{#if value}}value="{{value}}"{{/if}}
+      {{#if placeholder}}placeholder="{{placeholder}}"{{/if}}
+    />
+  {{/if}}
+
+  {{#if error}}
+    <span class="input__error">{{error}}</span>
+  {{/if}}
+</div>

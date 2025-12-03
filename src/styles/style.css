@@ -40,6 +40,10 @@ a:hover {
   color: var(--chat-link-hover);
 }
 
+.text-red {
+  color: var(--chat-danger);
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -59,52 +63,6 @@ h1 {
   box-sizing: border-box;
 }
 
-button {
-  border-color: transparent;
-}
-
-.button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 10px 10px;
-  font-size: 13px;
-  background-color: var(--chat-accent);
-  cursor: pointer;
-  color: var(--chat-white);
-}
-.button--link {
-  background-color: transparent;
-  border: none;
-  color: var(--chat-link);
-}
-button:hover {
-  border-color: var(--chat-button-hover-border);
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-.button--red {
-  color: var(--chat-danger);
-}
-.button--full {
-  width: 100%;
-}
-
-@media (prefers-color-scheme: light) {
-  /* TODO: Подумать над темной темой */
-  :root {
-    color: var(--chat-base-dark);
-    background-color: var(--chat-white);
-  }
-  a:hover {
-    color: var(--chat-link-hover-light);
-  }
-  button {
-    background-color: var(--chat-button-bg-light);
-  }
-}
-
 .border-bottom {
   border-bottom: 1px solid var(--chat-border-grey);
 }
@@ -117,18 +75,6 @@ button:focus-visible {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-}
-
-textarea,
-input[type='text'],
-input[type='number'],
-input[type='search'],
-input[type='password'] {
-  padding: 8px 16px;
-  background-color: var(--chat-input-bg);
-  border-radius: 30px;
-  border: 1px solid var(--chat-border-grey);
-  font-size: 12px;
 }
 
 .avatar {
@@ -152,6 +98,10 @@ input[type='password'] {
   height: 130px;
 }
 
+/*
+  Back to start
+*/
+
 .back-to {
   background-color: var(--chat-white-soft);
   display: flex;
@@ -159,6 +109,9 @@ input[type='password'] {
   justify-content: center;
   padding: 0 18px;
   border-right: 1px solid var(--chat-border-grey);
+  position: fixed;
+  left: 0;
+  height: 100%;
 }
 
 .back-to__btn {
@@ -178,53 +131,16 @@ input[type='password'] {
   background-color: var(--chat-accent-lighten-10);
 }
 
-.chat-app__back-to-wrapper {
-  display: flex;
-  height: 100%;
-}
+/*
+  Back to end
+*/
 
-.input-group {
-  display: flex;
-  flex-direction: column;
-  font-family: sans-serif;
-}
-
-.input-group label {
-  font-size: 12px;
-  color: var(--chat-text-grey);
-}
-
-.input-group input {
-  border: none;
-  outline: none;
-  font-size: 14px;
-  padding: 6px 0;
-  background-color: transparent;
-}
-
-.input-group .underline {
-  display: block;
-  height: 1px;
-  width: 100%;
-  background: var(--chat-accent);
-}
-
-.form__input-group-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.form {
+.card {
   border-radius: 12px;
   box-shadow: 0 0 6px var(--chat-shadow);
   width: 340px;
   margin: auto;
   padding: 30px;
-}
-
-.form__title {
-  text-align: center;
 }
 
 .content-center {
@@ -234,21 +150,29 @@ input[type='password'] {
   height: 100%;
 }
 
+/*
+  Utility start
+*/
+
 .text-center {
   text-align: center;
 }
 
-.login-page-form > .form__input-group-wrapper {
-  padding-bottom: 150px;
-}
-
-.register-page-form > .form__input-group-wrapper {
-  padding-bottom: 50px;
+.text-sm {
+  font-size: 13px;
 }
 
 .hidden {
   display: none;
 }
+
+.w-full {
+  width: 100%;
+}
+
+/*
+  Utility end
+*/
 
 .error-page {
   height: 100%;
@@ -270,3 +194,33 @@ input[type='password'] {
 .error-page__link {
   font-size: 11px;
 }
+
+.chat-app__profile {
+  max-width: 510px;
+  margin: 0 auto;
+}
+
+/*
+  Form start
+*/
+
+.form__title {
+  text-align: center;
+}
+
+.form__list-fields {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form__actions {
+  margin-top: 20px;
+}
+
+/*
+  Form end
+*/
