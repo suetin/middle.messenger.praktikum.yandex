@@ -20,28 +20,24 @@ type RequestOptions = {
 type RequestOptionsWithoutMethod = Omit<RequestOptions, 'method'>;
 
 export default class HTTPTransport {
-  get = (url: string, options: RequestOptionsWithoutMethod = {}): Promise<XMLHttpRequest> => {
-    return this.request(url, { ...options, method: METHODS.GET }, options.timeout);
-  };
+  private createMethod(method: HTTPMethod) {
+    return (url: string, options: RequestOptionsWithoutMethod = {}): Promise<XMLHttpRequest> =>
+      this.request(url, { ...options, method });
+  }
 
-  post = (url: string, options: RequestOptionsWithoutMethod = {}): Promise<XMLHttpRequest> => {
-    return this.request(url, { ...options, method: METHODS.POST }, options.timeout);
-  };
+  get = this.createMethod(METHODS.GET);
 
-  put = (url: string, options: RequestOptionsWithoutMethod = {}): Promise<XMLHttpRequest> => {
-    return this.request(url, { ...options, method: METHODS.PUT }, options.timeout);
-  };
+  post = this.createMethod(METHODS.POST);
 
-  delete = (url: string, options: RequestOptionsWithoutMethod = {}): Promise<XMLHttpRequest> => {
-    return this.request(url, { ...options, method: METHODS.DELETE }, options.timeout);
-  };
+  put = this.createMethod(METHODS.PUT);
+
+  delete = this.createMethod(METHODS.DELETE);
 
   request = (
     url: string,
     options: RequestOptions = {},
-    timeout: number = 5000,
   ): Promise<XMLHttpRequest> => {
-    const { headers = {}, method, data } = options;
+    const { headers = {}, method, data, timeout = 5000 } = options;
 
     return new Promise<XMLHttpRequest>((resolve, reject) => {
       if (!method) {

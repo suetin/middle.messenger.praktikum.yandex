@@ -61,7 +61,7 @@ export default class Block<P extends BlockProps = BlockProps> {
     this.componentDidMount();
   }
 
-  componentDidMount(_oldProps?: P) {}
+  componentDidMount() {}
 
   dispatchComponentDidMount() {
     this.eventBus().emit(Block.EVENTS.FLOW_CDM);
@@ -75,8 +75,8 @@ export default class Block<P extends BlockProps = BlockProps> {
     this._render();
   }
 
-  componentDidUpdate(_oldProps: P, _newProps: P) {
-    return true;
+  componentDidUpdate(oldProps: P, newProps: P) {
+    return oldProps !== newProps;
   }
 
   setProps = (nextProps?: Partial<P>) => {

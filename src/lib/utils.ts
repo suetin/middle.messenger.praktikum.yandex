@@ -5,11 +5,19 @@ export const queryStringify = (data: QueryParams): string => {
     throw new Error('Data must be object');
   }
 
-  const keys = Object.keys(data);
-  return keys.reduce((result, key, index) => {
-    const value = data[key];
-    return `${result}${key}=${String(value)}${index < keys.length - 1 ? '&' : ''}`;
-  }, '?');
+  const params = new URLSearchParams();
+
+  Object.entries(data).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (Array.isArray(value)) {
+      value.forEach((item) => params.append(key, String(item)));
+    } else {
+      params.append(key, String(value));
+    }
+  });
+
+  const search = params.toString();
+  return search ? `?${search}` : '';
 };
 
 type FetchWithRetryOptions = RequestInit & { tries?: number };
