@@ -61,8 +61,7 @@ export default class Block<P extends BlockProps = BlockProps> {
     this.componentDidMount();
   }
 
-  // eslint-disable-next-line
-  componentDidMount(oldProps?: P) {}
+  componentDidMount(_oldProps?: P) {}
 
   dispatchComponentDidMount() {
     this.eventBus().emit(Block.EVENTS.FLOW_CDM);
@@ -76,8 +75,7 @@ export default class Block<P extends BlockProps = BlockProps> {
     this._render();
   }
 
-  // eslint-disable-next-line
-  componentDidUpdate(oldProps: P, newProps: P) {
+  componentDidUpdate(_oldProps: P, _newProps: P) {
     return true;
   }
 
@@ -109,7 +107,15 @@ export default class Block<P extends BlockProps = BlockProps> {
     // Используйте шаблонизатор из npm или напишите свой безопасный
     // Нужно не в строку компилировать (или делать это правильно),
     // либо сразу в DOM-элементы возвращать из compile DOM-ноду
-    if (typeof block === 'string') {
+    if (block instanceof HTMLElement) {
+      if (this._element !== block) {
+        const parent = this._element.parentElement;
+        if (parent) {
+          parent.replaceChild(block, this._element);
+        }
+        this._element = block;
+      }
+    } else if (typeof block === 'string') {
       this._element.innerHTML = block;
     } else if (block instanceof DocumentFragment) {
       this._element.innerHTML = '';
@@ -121,7 +127,7 @@ export default class Block<P extends BlockProps = BlockProps> {
 
   // Потомки возвращают строку или готовый DOM-фрагмент (View перекрывает _render)
 
-  render(): string | DocumentFragment | null | undefined {
+  render(): string | DocumentFragment | HTMLElement | null | undefined {
     return '';
   }
 

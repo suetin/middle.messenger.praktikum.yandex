@@ -43,27 +43,7 @@
   justify-content: end;
 }
 
-.sidebar-chat-app__search-field {
-  display: block;
-  position: relative;
-}
-
-.sidebar-chat-app__search-field::before {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 0;
-  display: block;
-  width: 32px;
-  height: 100%;
-  background-image: url('/search.svg');
-  background-size: 20px 20px;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-input.sidebar-chat-app__search-input {
-  padding-left: 32px;
+.sidebar-chat-app__search-form .input {
   width: 100%;
 }
 

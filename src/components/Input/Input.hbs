@@ -1,4 +1,4 @@
-<div class="input {{#if isFilled}}input--filled{{else}}input--underline{{/if}}{{#if error}} input--error{{/if}}">
+<div class="input {{#if isFilled}}input--filled{{else}}input--underline{{/if}}{{#if error}} input--error{{/if}}{{#if className}} {{className}}{{/if}}">
   {{#if isFilled}}
     {{#if icon}}
       <span class="input__icon" aria-hidden="true">{{{icon}}}</span>

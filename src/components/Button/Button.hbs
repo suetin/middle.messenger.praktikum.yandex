@@ -1,1 +1,6 @@
-<div class="button{{#if fullWidth}} button--full{{/if}}">{{text}}</div>
+<button
+  class="button{{#if fullWidth}} button--full{{/if}}{{#if isIcon}} button--icon{{/if}}{{#if className}} {{className}}{{/if}}"
+  {{#if ariaLabel}}aria-label="{{ariaLabel}}"{{/if}}
+>
+  {{{content}}}
+</button>

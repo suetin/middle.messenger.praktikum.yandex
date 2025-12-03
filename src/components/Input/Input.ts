@@ -12,6 +12,7 @@ export type InputProps = {
   events?: Record<string, EventListener>;
   variant?: 'filled' | 'underline';
   icon?: string;
+  className?: string;
 };
 
 const compile = Handlebars.compile(template);
@@ -26,13 +27,14 @@ export default class Input extends Block<InputProps> {
   }
 
   private getViewModel() {
-    const { variant = 'underline', type, icon, ...rest } = this.props;
+    const { variant = 'underline', type, icon, className, ...rest } = this.props;
     return {
       ...rest,
       variant,
       isFilled: variant === 'filled',
       inputType: type ?? 'text',
       icon,
+      className,
     };
   }
 
