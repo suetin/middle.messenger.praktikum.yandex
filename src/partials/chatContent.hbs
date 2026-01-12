@@ -25,8 +25,8 @@
       <img src="/attach.svg" alt="attach" />
     </button>
     <form class="chat-content__form" aria-label="Отправка сообщения">
-      <input class="chat-content__input" type="text" placeholder="Сообщение" name="message" />
-      <button class="chat-content__send" type="submit"><img src="/send.svg" alt="send" /></button>
+      <div class="chat-content__input" data-component="message-input"></div>
+      <div data-component="send-button"></div>
     </form>
   </footer>
   {{else}}

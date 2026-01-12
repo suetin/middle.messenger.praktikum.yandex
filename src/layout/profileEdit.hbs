@@ -1,0 +1,30 @@
+<main class="chat-app">
+  {{> back-to}}
+  <div class="chat-app__profile profile">
+    <div class="profile__top">
+      <button class="js-avatar-open-form">
+        <img
+          title="Сменить аватар"
+          class="avatar avatar--lg"
+          src="{{ avatar }}"
+          alt="Аватар {{ name }}"
+        />
+      </button>
+      <h2 class="profile__name">{{ name }}</h2>
+    </div>
+
+    <form id="profile-form" class="form">
+      <ul class="form__list-fields">
+        {{#each fields}}
+        <li class="form__list-fields-item">
+          <div data-component="field-{{ name }}"></div>
+        </li>
+        {{/each}}
+      </ul>
+      <div class="form__actions text-center">
+        <div data-component="save-profile-button"></div>
+      </div>
+    </form>
+  </div>
+  {{> avatar-form}}
+</main>

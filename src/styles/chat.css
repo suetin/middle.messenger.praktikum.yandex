@@ -3,7 +3,7 @@
   grid-template-columns: 310px 1fr;
   height: 100%;
   overflow: hidden;
-  background-color: #ffffff;
+  background-color: #fff;
 }
 
 .chat-app__sidebar {
@@ -43,27 +43,7 @@
   justify-content: end;
 }
 
-.sidebar-chat-app__search-field {
-  display: block;
-  position: relative;
-}
-
-.sidebar-chat-app__search-field::before {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 0;
-  display: block;
-  width: 32px;
-  height: 100%;
-  background-image: url('/search.svg');
-  background-size: 20px 20px;
-  background-position: center;
-  background-repeat: no-repeat;
-}
-
-input.sidebar-chat-app__search-input {
-  padding-left: 32px;
+.sidebar-chat-app__search-form .input {
   width: 100%;
 }
 
@@ -138,7 +118,7 @@ input.sidebar-chat-app__search-input {
   justify-content: center;
   border-radius: 50%;
   background-color: var(--chat-accent);
-  color: #ffffff;
+  color: #fff;
   font-size: 11px;
   font-weight: 600;
 }
@@ -146,7 +126,7 @@ input.sidebar-chat-app__search-input {
 .chat-app__content {
   display: flex;
   flex-direction: column;
-  background-color: #ffffff;
+  background-color: #fff;
   margin-left: 20px;
   margin-right: 20px;
 }
@@ -229,7 +209,7 @@ input.sidebar-chat-app__search-input {
   gap: 10px;
   padding: 11px 0;
   border-top: 1px solid var(--chat-border-grey);
-  background-color: #ffffff;
+  background-color: #fff;
 }
 
 .chat-content__form {
@@ -253,7 +233,7 @@ input.sidebar-chat-app__search-input {
 .chat-content__send {
   border: none;
   background-color: var(--chat-accent);
-  color: #ffffff;
+  color: #fff;
   width: 28px;
   height: 28px;
   display: flex;
@@ -275,16 +255,4 @@ input.sidebar-chat-app__search-input {
   justify-content: center;
   color: var(--chat-text-grey);
   font-size: 14px;
-}
-
-.message {
-  border-radius: 20px;
-}
-
-.message--left {
-  background-color: #f8f8f8;
-}
-
-.message--right {
-  background-color: #e4edfd;
 }

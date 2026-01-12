@@ -6,13 +6,19 @@ import chatSidebarPartial from '../partials/chatSidebar.hbs?raw';
 import chatSidebarItem from '../partials/chatSidebarItem.hbs?raw';
 import chatContentPartial from '../partials/chatContent.hbs?raw';
 import chatMessagePartial from '../partials/chatMessage.hbs?raw';
+import { renderWithComponents } from '../lib/render';
+import Input from '../components/Input';
+import Button from '../components/Button';
+import { createHandleBlur, validateAndDisplayErrors } from '../lib/validationHandlers';
+import type { InputsMap } from '../lib/validationHandlers';
 
 Handlebars.registerPartial('chat-sidebar', chatSidebarPartial);
 Handlebars.registerPartial('chat-content', chatContentPartial);
 Handlebars.registerPartial('chat-message', chatMessagePartial);
 Handlebars.registerPartial('chat-sidebar-item', chatSidebarItem);
 
-const chatTemplate = Handlebars.compile(chatLayoutTemplate);
+const inputsByName: InputsMap = {};
+const handleBlur = createHandleBlur(inputsByName);
 
 const templateData = {
   chats: [
@@ -80,5 +86,53 @@ const templateData = {
 
 const appEl = document.getElementById('app');
 if (appEl) {
-  appEl.innerHTML = chatTemplate(templateData);
+  const searchIcon = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" />
+      <line x1="15.4142" y1="15" x2="20" y2="19.5858" stroke="currentColor" stroke-width="2" />
+    </svg>
+  `;
+
+  const messageInput = new Input({
+    name: 'message',
+    placeholder: 'Сообщение',
+    variant: 'filled',
+    className: 'chat-content__input',
+    events: {
+      focusout: handleBlur('message'),
+    },
+  });
+  inputsByName.message = messageInput;
+
+  const chatSearch = new Input({
+    name: 'search',
+    placeholder: 'Поиск',
+    variant: 'filled',
+    icon: searchIcon,
+    events: {
+      focusout: handleBlur('search'),
+    },
+  });
+  inputsByName.search = chatSearch;
+
+  const components = {
+    'chat-search': chatSearch,
+    'message-input': messageInput,
+    'send-button': new Button({
+      icon: '/send.svg',
+      variant: 'icon',
+      className: 'chat-content__send',
+      events: {
+        click: (event: Event) => {
+          event.preventDefault();
+          const form = document.querySelector('.chat-content__form') as HTMLFormElement | null;
+          if (!form) return;
+          if (!validateAndDisplayErrors(form, inputsByName)) return;
+          console.log('send message', messageInput.value);
+        },
+      },
+    }),
+  } as const;
+
+  renderWithComponents(chatLayoutTemplate, templateData, components, appEl);
 }

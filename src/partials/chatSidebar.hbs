@@ -1,14 +1,12 @@
 <nav class="chat-app__sidebar sidebar-chat-app" aria-label="Список чатов">
   <header class="sidebar-chat-app__header">
     <div class="sidebar-chat-app__profile-btn-wrapper">
-      <button class="sidebar-chat-app__profile-btn">
+      <a class="sidebar-chat-app__profile-btn" href="/profile.html">
         <span>Профиль</span><img src="/arrow-right.svg" alt="arrow right" />
-      </button>
+      </a>
     </div>
     <form class="sidebar-chat-app__search-form" role="search" aria-label="Поиск чатов">
-      <label class="sidebar-chat-app__search-field">
-        <input class="sidebar-chat-app__search-input" type="search" placeholder="Поиск" />
-      </label>
+      <div data-component="chat-search"></div>
     </form>
   </header>
   <ul class="chat-list">

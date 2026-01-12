@@ -1,0 +1,25 @@
+.button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 10px;
+  font-size: 13px;
+  background-color: var(--chat-accent);
+  cursor: pointer;
+  color: var(--chat-white);
+}
+
+.button--full {
+  width: 100%;
+  display: inline-flex;
+  justify-content: center;
+}
+
+.button--icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
