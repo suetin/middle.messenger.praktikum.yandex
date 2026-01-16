@@ -1,4 +1,4 @@
-import '../styles/style.css';
+import Block from '../lib/Block';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { renderWithComponents } from '../lib/render';
@@ -13,52 +13,64 @@ const data = {
   ],
 };
 
-const inputsByName: InputsMap = {};
+export default class LoginPage extends Block {
+  private _inputsByName: InputsMap = {};
+  private _components: Record<string, Input | Button> = {};
+  private _componentsInitialized = false;
 
-const handleBlur = createHandleBlur(inputsByName);
+  private _initComponents() {
+    if (this._componentsInitialized) {
+      return;
+    }
+    if (!this._inputsByName) {
+      this._inputsByName = {};
+    }
+    const inputsByName = this._inputsByName;
+    const handleBlur = createHandleBlur(inputsByName);
 
-const appEl = document.getElementById('app');
+    const inputComponents = data.fields.reduce<Record<string, Input>>((acc, field) => {
+      const input = new Input({
+        label: field.label,
+        name: field.name,
+        type: field.type,
+        placeholder: field.placeholder,
+        variant: 'underline',
+        events: {
+          focusout: handleBlur(field.name),
+        },
+      });
+      inputsByName[field.name] = input;
+      acc[`field-${field.name}`] = input;
+      return acc;
+    }, {});
 
-if (appEl) {
-  const inputComponents = data.fields.reduce<Record<string, Input>>((acc, field) => {
-    const input = new Input({
-      label: field.label,
-      name: field.name,
-      type: field.type,
-      placeholder: field.placeholder,
-      variant: 'underline',
+    const button = new Button({
+      text: 'Войти',
+      fullWidth: true,
       events: {
-        focusout: handleBlur(field.name),
-      },
-    });
-    inputsByName[field.name] = input;
-    acc[`field-${field.name}`] = input;
-    return acc;
-  }, {});
-
-  const button = new Button({
-    text: 'Войти',
-    fullWidth: true,
-    events: {
         click: (event: Event) => {
           event.preventDefault();
           const form = document.getElementById('login-form') as HTMLFormElement | null;
           if (!form) return;
-        if (!validateAndDisplayErrors(form, inputsByName)) return;
-        const formData = new FormData(form);
-        const formValues = Object.fromEntries(formData.entries());
-        console.log('login submit', formValues);
+          if (!validateAndDisplayErrors(form, inputsByName)) return;
+          const formData = new FormData(form);
+          const formValues = Object.fromEntries(formData.entries());
+          console.log('login submit', formValues);
+        },
       },
-    },
-  });
+    });
 
-  renderWithComponents(
-    loginPageLayout,
-    data,
-    {
+    this._components = {
       ...inputComponents,
       'login-button': button,
-    },
-    appEl,
-  );
+    };
+    this._componentsInitialized = true;
+  }
+
+  render() {
+    this._initComponents();
+    const root = document.createElement('div');
+    renderWithComponents(loginPageLayout, data, this._components, root);
+    return root.firstElementChild ?? root;
+  }
 }

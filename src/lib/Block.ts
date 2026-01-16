@@ -163,11 +163,13 @@ export default class Block<P extends BlockProps = BlockProps> {
   }
 
   show() {
-    this.getContent().style.display = 'block';
+    const element = this.getContent();
+    element.style.display = '';
   }
 
   hide() {
-    this.getContent().style.display = 'none';
+    const element = this.getContent();
+    element.style.display = 'none';
   }
 
   destroy() {

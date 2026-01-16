@@ -1,9 +1,8 @@
-import '../styles/style.css';
-import '../styles/profile.css';
 import Handlebars from 'handlebars';
 import profileLayoutTemplate from '../layout/profile.hbs?raw';
 import backToTemplate from '../partials/backTo.hbs?raw';
 import avatarFormTemplate from '../partials/avatarForm.hbs?raw';
+import Block from '../lib/Block';
 
 Handlebars.registerPartial('back-to', backToTemplate);
 Handlebars.registerPartial('avatar-form', avatarFormTemplate);
@@ -22,22 +21,29 @@ const data = {
   ],
 };
 
-const appEl = document.getElementById('app');
-if (appEl) {
-  appEl.innerHTML = template(data);
-}
+export default class ProfilePage extends Block {
+  render() {
+    const html = template(data).trim();
+    const tpl = document.createElement('template');
+    tpl.innerHTML = html;
+    return tpl.content.firstElementChild ?? '';
+  }
 
-const avatarOpenForm = document.querySelector('.js-avatar-form, .js-avatar-open-form');
-const avatarModal = document.querySelector('.js-avatar-modal');
+  componentDidMount() {
+    const root = this.getContent();
+    const avatarOpenForm = root.querySelector('.js-avatar-form, .js-avatar-open-form');
+    const avatarModal = root.querySelector('.js-avatar-modal');
 
-if (avatarOpenForm && avatarModal) {
-  avatarOpenForm.addEventListener('click', () => {
-    avatarModal.classList.toggle('avatar-modal--open');
-  });
+    if (avatarOpenForm && avatarModal) {
+      avatarOpenForm.addEventListener('click', () => {
+        avatarModal.classList.toggle('avatar-modal--open');
+      });
 
-  avatarModal.addEventListener('click', (event) => {
-    if (event.target === avatarModal) {
-      avatarModal.classList.remove('avatar-modal--open');
+      avatarModal.addEventListener('click', (event) => {
+        if (event.target === avatarModal) {
+          avatarModal.classList.remove('avatar-modal--open');
+        }
+      });
     }
-  });
+  }
 }

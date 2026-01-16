@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+
+:root {
+  --chat-accent: #3369f3;
+  --chat-accent-lighten-10: #4473eb;
+  --chat-border-grey: #eaeaea;
+  --chat-text-grey: #999;
+  --chat-text-black: #1e1e1e;
+  --chat-link: #3369f3;
+  --chat-link-hover: #4071eb;
+  --chat-white: #fff;
+  --chat-white-soft: #fbfbfb;
+  --chat-input-bg: #efefef;
+  --chat-button-hover-border: #646cff;
+  --chat-danger: #f00;
+  --chat-base-dark: #213547;
+  --chat-link-hover-light: #747bff;
+  --chat-button-bg-light: #f9f9f9;
+  --chat-shadow: rgb(0 0 0 / 14%);
+
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: light;
+  color: var(--chat-text-black);
+  font-synthesis: none;
+  text-rendering: optimizelegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

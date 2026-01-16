@@ -1,15 +1,19 @@
-import '../styles/style.css';
 import Handlebars from 'handlebars';
 import errorPage from '../partials/serverError.hbs?raw';
+import Block from '../lib/Block';
 
 const template = Handlebars.compile(errorPage);
 
-const appEl = document.getElementById('app');
-if (appEl) {
-  appEl.innerHTML = template({
-    code: '404',
-    message: 'Не туда попали',
-    backUrl: '/chat.html',
-    backText: 'Назад к чатам',
-  });
+export default class NotFoundPage extends Block {
+  render() {
+    const html = template({
+      code: '404',
+      message: 'Не туда попали',
+      backUrl: '/chat',
+      backText: 'Назад к чатам',
+    }).trim();
+    const tpl = document.createElement('template');
+    tpl.innerHTML = html;
+    return tpl.content.firstElementChild ?? '';
+  }
 }
