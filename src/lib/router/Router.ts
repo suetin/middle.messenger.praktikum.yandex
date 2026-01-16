@@ -8,6 +8,13 @@ type RouterOptions = {
   rootQuery: string;
 };
 
+type AuthGuardOptions = {
+  protectedPaths: string[];
+  guestOnlyPaths?: string[];
+  redirectTo: string;
+  redirectAuthedTo?: string;
+};
+
 export default class Router {
   private static __instance: Router | null = null;
   private routes: Route[] = [];
@@ -15,6 +22,8 @@ export default class Router {
   private _currentRoute: Route | null = null;
   private _rootQuery: string;
   private _fallbackRoute: Route | null = null;
+  private _isAuthenticated = false;
+  private _authGuard: AuthGuardOptions | null = null;
 
   constructor(rootQuery: string | RouterOptions) {
     if (Router.__instance) {
@@ -35,6 +44,16 @@ export default class Router {
       this._fallbackRoute = route;
     }
 
+    return this;
+  }
+
+  setAuth(isAuthenticated: boolean) {
+    this._isAuthenticated = isAuthenticated;
+    return this;
+  }
+
+  setAuthGuard(options: AuthGuardOptions) {
+    this._authGuard = options;
     return this;
   }
 
@@ -71,6 +90,11 @@ export default class Router {
 
   private _onRoute(pathname: string) {
     const normalized = this._normalizePathname(pathname);
+    const guardRedirect = this._getGuardRedirect(normalized);
+    if (guardRedirect) {
+      this.go(guardRedirect);
+      return;
+    }
     const route = this.getRoute(normalized);
     if (!route) {
       return;
@@ -134,5 +158,29 @@ export default class Router {
       return normalized === '' ? '/' : normalized;
     }
     return pathname;
+  }
+
+  private _getGuardRedirect(pathname: string) {
+    if (!this._authGuard) {
+      return null;
+    }
+
+    const { protectedPaths, guestOnlyPaths = [], redirectTo, redirectAuthedTo } = this._authGuard;
+    const isProtected = this._matchesPathGroup(pathname, protectedPaths);
+    const isGuestOnly = this._matchesPathGroup(pathname, guestOnlyPaths);
+
+    if (!this._isAuthenticated && isProtected) {
+      return redirectTo;
+    }
+
+    if (this._isAuthenticated && isGuestOnly) {
+      return redirectAuthedTo ?? protectedPaths[0] ?? '/';
+    }
+
+    return null;
+  }
+
+  private _matchesPathGroup(pathname: string, paths: string[]) {
+    return paths.some((path) => pathname === path || pathname.startsWith(`${path}/`));
   }
 }

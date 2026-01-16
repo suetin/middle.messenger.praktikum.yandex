@@ -74,6 +74,7 @@ export default class RegisterPage extends Block {
 
             if (response.status >= 200 && response.status < 300) {
               const router = new Router('#app');
+              router.setAuth(true);
               router.go('/messenger');
               return;
             }

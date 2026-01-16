@@ -1,4 +1,6 @@
 import Block from '../lib/Block';
+import Router from '../lib/router/Router';
+import HTTPTransport from '../lib/HTTPTransport';
 import Button from '../components/Button';
 import Input from '../components/Input';
 import { renderWithComponents } from '../lib/render';
@@ -12,6 +14,9 @@ const data = {
     { label: 'Пароль', name: 'password', type: 'password', placeholder: 'Введите пароль' },
   ],
 };
+
+const BASE_URL = 'https://ya-praktikum.tech/api/v2';
+const authApi = new HTTPTransport();
 
 export default class LoginPage extends Block {
   private _inputsByName: InputsMap = {};
@@ -48,14 +53,44 @@ export default class LoginPage extends Block {
       text: 'Войти',
       fullWidth: true,
       events: {
-        click: (event: Event) => {
+        click: async (event: Event) => {
           event.preventDefault();
           const form = document.getElementById('login-form') as HTMLFormElement | null;
           if (!form) return;
           if (!validateAndDisplayErrors(form, inputsByName)) return;
           const formData = new FormData(form);
-          const formValues = Object.fromEntries(formData.entries());
-          console.log('login submit', formValues);
+          const payload = Object.fromEntries(
+            Array.from(formData.entries()).map(([key, value]) => [key, String(value)]),
+          );
+
+          try {
+            const response = await authApi.post(`${BASE_URL}/auth/signin`, {
+              headers: { 'Content-Type': 'application/json' },
+              data: JSON.stringify(payload),
+            });
+
+            if (response.status >= 200 && response.status < 300) {
+              const router = new Router('#app');
+              router.setAuth(true);
+              router.go('/messenger');
+              return;
+            }
+
+            let message = 'Ошибка входа';
+            try {
+              const data = JSON.parse(response.responseText) as { reason?: string };
+              if (data.reason) {
+                message = data.reason;
+              }
+            } catch {
+              // ignore JSON parse errors
+            }
+            console.error('login error', response.status, response.responseText);
+            alert(message);
+          } catch (error) {
+            console.error('login request failed', error);
+            alert('Сеть недоступна. Попробуйте позже.');
+          }
         },
       },
     });
