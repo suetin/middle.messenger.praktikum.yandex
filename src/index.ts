@@ -20,6 +20,7 @@ router
   .use('/settings', ProfilePage)
   .use('/settings/edit', ProfileEditPage)
   .use('/settings/password', ProfilePasswordPage)
+  .use('/messenger/{chatId}', ChatPage)
   .use('/messenger', ChatPage)
   .use('/404', NotFoundPage)
   .use('/500', ServerErrorPage)
