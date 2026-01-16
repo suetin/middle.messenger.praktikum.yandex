@@ -12,12 +12,12 @@
 
 #### Страницы
 
-- [Чат](https://remarkable-ganache-20b43c.netlify.app/chat)
-- [Профиль](https://remarkable-ganache-20b43c.netlify.app/profile)
-- [Изменение данных](https://remarkable-ganache-20b43c.netlify.app/profile-edit)
-- [Изменение пароля](https://remarkable-ganache-20b43c.netlify.app/profile-password)
-- [Авторизация](https://remarkable-ganache-20b43c.netlify.app/login)
-- [Регистрация](https://remarkable-ganache-20b43c.netlify.app/register)
+- [Чат](https://remarkable-ganache-20b43c.netlify.app/messenger)
+- [Профиль](https://remarkable-ganache-20b43c.netlify.app/settings)
+- [Изменение данных](https://remarkable-ganache-20b43c.netlify.app/settings/edit)
+- [Изменение пароля](https://remarkable-ganache-20b43c.netlify.app/settings/password)
+- [Авторизация](https://remarkable-ganache-20b43c.netlify.app/)
+- [Регистрация](https://remarkable-ganache-20b43c.netlify.app/sign-up)
 - [404](https://remarkable-ganache-20b43c.netlify.app/404)
 - [500](https://remarkable-ganache-20b43c.netlify.app/500)
 

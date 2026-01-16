@@ -81,7 +81,8 @@ export default class ProfileEditPage extends Block {
     this._initComponents();
     const root = document.createElement('div');
     renderWithComponents(profileLayoutTemplate, data, this._components, root);
-    return root.firstElementChild ?? root;
+    const firstChild = root.firstElementChild;
+    return firstChild instanceof HTMLElement ? firstChild : root;
   }
 
   componentDidMount() {

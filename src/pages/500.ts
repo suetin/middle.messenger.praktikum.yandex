@@ -9,11 +9,12 @@ export default class ServerErrorPage extends Block {
     const html = template({
       code: '500',
       message: 'Мы уже фиксим',
-      backUrl: '/chat',
+      backUrl: '/messenger',
       backText: 'Назад к чатам',
     }).trim();
     const tpl = document.createElement('template');
     tpl.innerHTML = html;
-    return tpl.content.firstElementChild ?? '';
+    const firstChild = tpl.content.firstElementChild;
+    return firstChild instanceof HTMLElement ? firstChild : '';
   }
 }

@@ -149,6 +149,7 @@ export default class ChatPage extends Block {
     this._initComponents();
     const root = document.createElement('div');
     renderWithComponents(chatLayoutTemplate, templateData, this._components, root);
-    return root.firstElementChild ?? root;
+    const firstChild = root.firstElementChild;
+    return firstChild instanceof HTMLElement ? firstChild : root;
   }
 }

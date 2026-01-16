@@ -9,11 +9,12 @@ export default class NotFoundPage extends Block {
     const html = template({
       code: '404',
       message: 'Не туда попали',
-      backUrl: '/chat',
+      backUrl: '/messenger',
       backText: 'Назад к чатам',
     }).trim();
     const tpl = document.createElement('template');
     tpl.innerHTML = html;
-    return tpl.content.firstElementChild ?? '';
+    const firstChild = tpl.content.firstElementChild;
+    return firstChild instanceof HTMLElement ? firstChild : '';
   }
 }

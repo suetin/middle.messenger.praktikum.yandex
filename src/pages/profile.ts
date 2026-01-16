@@ -26,7 +26,8 @@ export default class ProfilePage extends Block {
     const html = template(data).trim();
     const tpl = document.createElement('template');
     tpl.innerHTML = html;
-    return tpl.content.firstElementChild ?? '';
+    const firstChild = tpl.content.firstElementChild;
+    return firstChild instanceof HTMLElement ? firstChild : '';
   }
 
   componentDidMount() {

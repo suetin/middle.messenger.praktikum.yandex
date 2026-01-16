@@ -12,13 +12,12 @@ import ServerErrorPage from './pages/500';
 const router = new Router('#app');
 
 router
-  .use('/', ChatPage)
-  .use('/chat', ChatPage)
-  .use('/login', LoginPage)
-  .use('/register', RegisterPage)
-  .use('/profile', ProfilePage)
-  .use('/profile-edit', ProfileEditPage)
-  .use('/profile-password', ProfilePasswordPage)
+  .use('/', LoginPage)
+  .use('/sign-up', RegisterPage)
+  .use('/settings', ProfilePage)
+  .use('/settings/edit', ProfileEditPage)
+  .use('/settings/password', ProfilePasswordPage)
+  .use('/messenger', ChatPage)
   .use('/404', NotFoundPage)
   .use('/500', ServerErrorPage)
   .use('*', NotFoundPage)
