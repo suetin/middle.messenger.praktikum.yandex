@@ -6,58 +6,79 @@ import chatContentPartial from '../partials/chatContent.hbs?raw';
 import chatMessagePartial from '../partials/chatMessage.hbs?raw';
 import Block from '../lib/Block';
 import type { BlockProps } from '../lib/Block';
-import Router from '../lib/router/Router';
-import HTTPTransport from '../lib/HTTPTransport';
+import { handleAuthResponse } from '../lib/apiGuard';
+import ChatSocket from '../lib/ChatSocket';
 import { renderWithComponents } from '../lib/render';
 import Input from '../components/Input';
 import Button from '../components/Button';
-import { createHandleBlur, validateAndDisplayErrors } from '../lib/validationHandlers';
-import type { InputsMap } from '../lib/validationHandlers';
+import { getResourceUrl } from '../lib/resourceUrl';
+import { formatTime } from '../lib/formatters';
+import { BASE_URL } from '../api/base';
+import {
+  createChat,
+  getChatFiles,
+  getChatToken,
+  getChats,
+  getUser,
+  uploadResource,
+} from '../api/chats';
 
 Handlebars.registerPartial('chat-sidebar', chatSidebarPartial);
 Handlebars.registerPartial('chat-content', chatContentPartial);
 Handlebars.registerPartial('chat-message', chatMessagePartial);
 Handlebars.registerPartial('chat-sidebar-item', chatSidebarItem);
 
+let currentUserId: number | null = null;
+
+Handlebars.registerHelper('eq', (left: unknown, right: unknown) => left === right);
+Handlebars.registerHelper('formatTime', (value?: string) => (value ? formatTime(value) : ''));
+Handlebars.registerHelper('chatAvatar', (value?: string | null) =>
+  value ? getResourceUrl(BASE_URL, value) : '/icon.svg',
+);
+
 type ChatItem = {
   id: number;
   title: string;
-  avatar: string;
-  lastMessage: string;
-  time: string;
-  unread: number;
-  isActive: boolean;
+  avatar: string | null;
+  unread_count: number;
+  last_message?: { content?: string; time?: string };
 };
 
-type ActiveChat = {
-  title: string;
-  status?: string;
-  avatar: string;
-  messages: Array<{
-    id: string;
-    text?: string;
-    image?: string;
-    time: string;
-    isOwn: boolean;
-  }>;
+type ActiveChat = ChatItem;
+
+type RawChatMessage = {
+  type?: string;
+  content?: unknown;
+  time?: unknown;
+  user_id?: number;
+  file?: { path?: string };
+};
+
+type ChatMessage = {
+  id: string;
+  text: string;
+  image: string;
+  time: string;
+  isOwn: boolean;
 };
 
 type ChatPageProps = BlockProps & {
   chats?: ChatItem[];
   activeChat?: ActiveChat | null;
   activeChatId?: number | null;
+  messages?: ChatMessage[];
   params?: Record<string, string>;
   pathname?: string;
   events?: Record<string, EventListener>;
 };
 
-const BASE_URL = 'https://ya-praktikum.tech/api/v2';
-const chatApi = new HTTPTransport();
-
 export default class ChatPage extends Block<ChatPageProps> {
-  private _inputsByName: InputsMap | null = null;
   private _components: Record<string, Input | Button> = {};
   private _componentsInitialized = false;
+  private _userId: number | null = null;
+  private _socket: ChatSocket | null = null;
+  private _resourcePaths: Map<number, string> = new Map();
+  private _authChecked = false;
 
   constructor(tagName: string = 'div', props: BlockProps = {}) {
     const typedProps = props as ChatPageProps;
@@ -66,11 +87,15 @@ export default class ChatPage extends Block<ChatPageProps> {
       chats: typedProps.chats ?? [],
       activeChat: typedProps.activeChat ?? null,
       activeChatId: typedProps.activeChatId ?? null,
+      messages: typedProps.messages ?? [],
     });
     const mergedEvents = {
       ...(typedProps.events ?? {}),
       click: (event: Event) => {
         this._handleChatClick(event as MouseEvent);
+      },
+      change: (event: Event) => {
+        this._handleFileChange(event);
       },
     };
     this.setProps({ events: mergedEvents });
@@ -80,12 +105,6 @@ export default class ChatPage extends Block<ChatPageProps> {
     if (this._componentsInitialized) {
       return;
     }
-    if (!this._inputsByName) {
-      this._inputsByName = {};
-    }
-    const inputsByName = this._inputsByName;
-    const handleBlur = createHandleBlur(inputsByName);
-
     const searchIcon = `
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" />
@@ -98,23 +117,13 @@ export default class ChatPage extends Block<ChatPageProps> {
       placeholder: 'Сообщение',
       variant: 'filled',
       className: 'chat-content__input',
-      events: {
-        focusout: handleBlur('message'),
-      },
     });
-    inputsByName.message = messageInput;
-
     const chatSearch = new Input({
       name: 'search',
       placeholder: 'Поиск',
       variant: 'filled',
       icon: searchIcon,
-      events: {
-        focusout: handleBlur('search'),
-      },
     });
-    inputsByName.search = chatSearch;
-
     this._components = {
       'chat-search': chatSearch,
       'message-input': messageInput,
@@ -127,8 +136,8 @@ export default class ChatPage extends Block<ChatPageProps> {
             event.preventDefault();
             const form = document.querySelector('.chat-content__form') as HTMLFormElement | null;
             if (!form) return;
-            if (!validateAndDisplayErrors(form, inputsByName)) return;
-            console.log('send message', messageInput.value);
+            this._sendMessage(messageInput.value);
+            messageInput.setValue('');
           },
         },
       }),
@@ -152,8 +161,9 @@ export default class ChatPage extends Block<ChatPageProps> {
     const rawId = this.props.params?.chatId;
     if (!rawId) {
       if (this.props.activeChatId !== null) {
-        this.setProps({ activeChatId: null, activeChat: null });
+        this.setProps({ activeChatId: null, activeChat: null, messages: [] });
       }
+      this._closeSocket();
       return;
     }
     const chatId = Number(rawId);
@@ -165,6 +175,20 @@ export default class ChatPage extends Block<ChatPageProps> {
 
   private _handleChatClick = (event: MouseEvent) => {
     const target = event.target as HTMLElement | null;
+    const createButton = target?.closest('[data-create-chat]');
+    if (createButton) {
+      event.preventDefault();
+      void this._createChat();
+      return;
+    }
+    const attachButton = target?.closest('[data-attach-button]');
+    if (attachButton) {
+      event.preventDefault();
+      const root = this.getContent();
+      const input = root.querySelector('[data-attach-input]') as HTMLInputElement | null;
+      input?.click();
+      return;
+    }
     const item = target?.closest('[data-chat-id]') as HTMLElement | null;
     if (!item) return;
     const id = item.dataset.chatId;
@@ -174,81 +198,244 @@ export default class ChatPage extends Block<ChatPageProps> {
     this._setActiveChat(chatId, { syncUrl: true });
   };
 
-  private _setActiveChat(chatId: number, options: { syncUrl: boolean }) {
-    if (this.props.activeChatId === chatId) {
+  private _handleFileChange(event: Event) {
+    const target = event.target as HTMLInputElement | null;
+    if (!target || !target.matches('[data-attach-input]')) {
       return;
     }
-    const chats = (this.props.chats ?? []).map((chat) => ({
-      ...chat,
-      isActive: chat.id === chatId,
-    }));
+    const file = target.files?.[0];
+    if (!file) {
+      return;
+    }
+    void this._uploadFile(file);
+    target.value = '';
+  }
+
+  private async _createChat() {
+    const title = window.prompt('Название чата');
+    if (!title) {
+      return;
+    }
+    const response = await this._safeRequest(() => createChat(title), 'create chat');
+    if (!response || this._handleAuth(response)) return;
+    if (response.status < 200 || response.status >= 300) {
+      console.error('create chat error', response.status, response.responseText);
+      return;
+    }
+    await this._loadChats();
+  }
+
+  private _setActiveChat(chatId: number, options: { syncUrl: boolean }) {
+    if (this.props.activeChatId === chatId && this.props.activeChat) {
+      return;
+    }
+    const chats = this.props.chats ?? [];
     const activeChat = chats.find((chat) => chat.id === chatId) ?? null;
     if (options.syncUrl) {
-      const router = new Router('#app');
-      router.go(`/messenger/${chatId}`);
+      window.history.pushState({}, '', `/messenger/${chatId}`);
     }
+    const resolvedActiveChat = activeChat ?? null;
     this.setProps({
-      chats,
       activeChatId: chatId,
-      activeChat: activeChat
-        ? {
-            title: activeChat.title,
-            avatar: activeChat.avatar,
-            messages: [],
-          }
-        : null,
+      activeChat: resolvedActiveChat,
+      messages: [],
     });
+    if (resolvedActiveChat) {
+      void this._connectToChat(chatId);
+    }
   }
 
   private async _loadChats() {
-    try {
-      const response = await chatApi.get(`${BASE_URL}/chats`, {
-        headers: { 'Content-Type': 'application/json' },
-      });
+    const response = await this._safeRequest(() => getChats(), 'get chats');
+    if (!response || this._handleAuth(response)) return;
+    if (response.status < 200 || response.status >= 300) {
+      console.error('get chats error', response.status, response.responseText);
+      return;
+    }
 
-      if (response.status === 401) {
-        const router = new Router('#app');
-        router.setAuth(false);
-        router.go('/');
-        return;
+    const chats = JSON.parse(response.responseText) as ChatItem[];
+    this.setProps({ chats });
+    this._applyActiveFromParams();
+  }
+
+  private _sendMessage(content: string) {
+    const message = content.trim();
+    if (!message) {
+      return;
+    }
+    this._socket?.sendMessage(message);
+  }
+
+  private _sendFile(fileId: number) {
+    this._socket?.sendFile(fileId);
+  }
+
+  private async _uploadFile(file: File) {
+    const response = await this._safeRequest(() => uploadResource(file), 'upload file');
+    if (!response || this._handleAuth(response)) return;
+    if (response.status < 200 || response.status >= 300) {
+      console.error('upload file error', response.status, response.responseText);
+      return;
+    }
+
+    const data = JSON.parse(response.responseText) as { id?: number; path?: string };
+    if (typeof data.id === 'number') {
+      if (data.path) {
+        this._resourcePaths.set(data.id, data.path);
       }
-
-      if (response.status < 200 || response.status >= 300) {
-        console.error('get chats error', response.status, response.responseText);
-        return;
-      }
-
-      const data = JSON.parse(response.responseText) as Array<{
-        id: number;
-        title: string;
-        avatar: string | null;
-        unread_count: number;
-        last_message?: { content?: string; time?: string };
-      }>;
-
-      const chats = data.map((item) => ({
-        id: item.id,
-        title: item.title,
-        avatar: item.avatar ? `${BASE_URL}/resources/${item.avatar}` : '/icon.svg',
-        lastMessage: item.last_message?.content ?? '',
-        time: item.last_message?.time ? this._formatTime(item.last_message.time) : '',
-        unread: item.unread_count ?? 0,
-        isActive: false,
-      }));
-
-      this.setProps({ chats });
-      this._applyActiveFromParams();
-    } catch (error) {
-      console.error('get chats request failed', error);
+      this._sendFile(data.id);
     }
   }
 
-  private _formatTime(value: string) {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) {
-      return '';
+  private async _connectToChat(chatId: number) {
+    this._closeSocket();
+
+    const userId = await this._ensureUserId();
+    if (!userId) {
+      return;
     }
-    return date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+    await this._loadChatFiles(chatId);
+    const response = await this._safeRequest(() => getChatToken(chatId), 'get token');
+    if (!response || this._handleAuth(response)) return;
+    if (response.status < 200 || response.status >= 300) {
+      console.error('get token error', response.status, response.responseText);
+      return;
+    }
+
+    const data = JSON.parse(response.responseText) as { token: string };
+    this._socket = new ChatSocket({
+      onMessage: (payload) => this._handleSocketMessage(payload),
+      onError: (event) => console.error('socket error', event),
+    });
+    this._socket.connect({ userId, chatId, token: data.token });
+  }
+
+  private _handleSocketMessage(data: string) {
+    let payload: unknown;
+    try {
+      payload = JSON.parse(data);
+    } catch {
+      return;
+    }
+
+    if (Array.isArray(payload)) {
+      const messages = payload
+        .filter((item) => this._isChatMessage(item))
+        .map((item) => this._normalizeMessage(item))
+        .reverse();
+      this.setProps({ messages });
+      return;
+    }
+
+    if (!this._isChatMessage(payload)) {
+      return;
+    }
+
+    const current = this.props.messages ?? [];
+    this.setProps({
+      messages: [...current, this._normalizeMessage(payload)],
+    });
+  }
+
+  private _isChatMessage(value: unknown): value is RawChatMessage {
+    if (typeof value !== 'object' || value === null) {
+      return false;
+    }
+    const type = (value as { type?: unknown }).type;
+    return type === 'message' || type === 'file';
+  }
+
+  private _normalizeMessage(message: RawChatMessage): ChatMessage {
+    const type = String(message.type ?? '');
+    if (type === 'file') {
+      const file = message.file;
+      const content = String(message.content ?? '');
+      const image = file?.path
+        ? getResourceUrl(BASE_URL, file.path)
+        : getResourceUrl(BASE_URL, content, this._resourcePaths);
+      return {
+        id: `m-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        image,
+        text: '',
+        isOwn: message.user_id === currentUserId,
+        time: formatTime(String(message.time ?? '')),
+      };
+    }
+    return {
+      id: `m-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      text: String(message.content ?? ''),
+      image: '',
+      isOwn: message.user_id === currentUserId,
+      time: formatTime(String(message.time ?? '')),
+    };
+  }
+
+  private async _loadChatFiles(chatId: number) {
+    const response = await this._safeRequest(() => getChatFiles(chatId), 'get chat files');
+    if (!response || this._handleAuth(response)) return;
+    if (response.status < 200 || response.status >= 300) {
+      console.error('get chat files error', response.status, response.responseText);
+      return;
+    }
+
+    const files = JSON.parse(response.responseText) as Array<{ id?: number; path?: string }>;
+    files.forEach((file) => {
+      if (typeof file.id === 'number' && file.path) {
+        this._resourcePaths.set(file.id, file.path);
+      }
+    });
+  }
+
+  private async _ensureUserId() {
+    if (this._userId) {
+      return this._userId;
+    }
+    const response = await this._safeRequest(() => getUser(), 'get user');
+    if (!response || this._handleAuth(response)) return null;
+    if (response.status < 200 || response.status >= 300) {
+      console.error('get user error', response.status, response.responseText);
+      return null;
+    }
+    const data = JSON.parse(response.responseText) as { id?: number };
+    if (typeof data.id === 'number') {
+      this._userId = data.id;
+      currentUserId = data.id;
+      return data.id;
+    }
+    return null;
+  }
+
+  private async _safeRequest(
+    request: () => Promise<XMLHttpRequest>,
+    label: string,
+  ): Promise<XMLHttpRequest | null> {
+    try {
+      return await request();
+    } catch (error) {
+      console.error(`${label} request failed`, error);
+      return null;
+    }
+  }
+
+  private _handleAuth(response: XMLHttpRequest) {
+    if (this._authChecked) {
+      return handleAuthResponse(response);
+    }
+    this._authChecked = true;
+    return handleAuthResponse(response);
+  }
+
+  private _closeSocket() {
+    if (this._socket) {
+      this._socket.close();
+      this._socket = null;
+    }
+  }
+
+  destroy() {
+    this._closeSocket();
+    super.destroy();
   }
 
   render() {

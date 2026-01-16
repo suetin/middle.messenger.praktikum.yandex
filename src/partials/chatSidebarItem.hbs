@@ -1,16 +1,16 @@
-<li class="chat-list__item {{#if isActive}}chat-list__item--active{{/if}}" data-chat-id="{{id}}">
+<li class="chat-list__item {{#if (eq id ../activeChatId)}}chat-list__item--active{{/if}}" data-chat-id="{{id}}">
   <div class="chat-list__avatar">
-    <img class="avatar avatar--md" src="{{ avatar }}" alt="Аватар {{ title }}" />
+    <img class="avatar avatar--md" src="{{ chatAvatar avatar }}" alt="Аватар {{ title }}" />
   </div>
   <div class="chat-list__body">
     <div class="chat-list__row">
       <span class="chat-list__title">{{ title }}</span>
-      <span class="chat-list__time">{{ time }}</span>
+      <span class="chat-list__time">{{ formatTime last_message.time }}</span>
     </div>
     <div class="chat-list__row">
-      <span class="chat-list__preview">{{ lastMessage }}</span>
-      {{#if unread}}
-      <span class="chat-list__badge">{{ unread }}</span>
+      <span class="chat-list__preview">{{ last_message.content }}</span>
+      {{#if unread_count}}
+      <span class="chat-list__badge">{{ unread_count }}</span>
       {{/if}}
     </div>
   </div>
