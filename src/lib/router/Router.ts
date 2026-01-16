@@ -94,6 +94,13 @@ export default class Router {
     }
 
     const target = event.target as HTMLElement | null;
+    const backButton = target?.closest('[data-back]');
+    if (backButton) {
+      event.preventDefault();
+      this.back();
+      return;
+    }
+
     const anchor = target?.closest('a');
     if (!anchor) {
       return;

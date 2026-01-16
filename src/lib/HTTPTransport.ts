@@ -15,6 +15,7 @@ type RequestOptions = {
   headers?: Record<string, string>;
   data?: RequestData;
   timeout?: number;
+  withCredentials?: boolean;
 };
 
 type RequestOptionsWithoutMethod = Omit<RequestOptions, 'method'>;
@@ -37,7 +38,7 @@ export default class HTTPTransport {
     url: string,
     options: RequestOptions = {},
   ): Promise<XMLHttpRequest> => {
-    const { headers = {}, method, data, timeout = 5000 } = options;
+    const { headers = {}, method, data, timeout = 5000, withCredentials = true } = options;
 
     return new Promise<XMLHttpRequest>((resolve, reject) => {
       if (!method) {
@@ -51,6 +52,7 @@ export default class HTTPTransport {
       const requestUrl = isGet && data ? `${url}${queryStringify(data as QueryParams)}` : url;
 
       xhr.open(method, requestUrl);
+      xhr.withCredentials = withCredentials;
 
       Object.keys(headers).forEach((key) => {
         xhr.setRequestHeader(key, headers[key]);

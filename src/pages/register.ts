@@ -1,4 +1,6 @@
 import Block from '../lib/Block';
+import Router from '../lib/router/Router';
+import HTTPTransport from '../lib/HTTPTransport';
 import registerLayoutTemplate from '../layout/register.hbs?raw';
 import { renderWithComponents } from '../lib/render';
 import Input from '../components/Input';
@@ -16,6 +18,9 @@ const data = {
     { label: 'Телефон', name: 'phone', type: 'text' },
   ],
 };
+
+const BASE_URL = 'https://ya-praktikum.tech/api/v2';
+const authApi = new HTTPTransport();
 
 export default class RegisterPage extends Block {
   private _inputsByName: InputsMap = {};
@@ -51,13 +56,43 @@ export default class RegisterPage extends Block {
       text: 'Зарегистрироваться',
       fullWidth: true,
       events: {
-        click: (event: Event) => {
+        click: async (event: Event) => {
           event.preventDefault();
           const form = document.getElementById('register-form') as HTMLFormElement | null;
           if (!form) return;
           if (!validateAndDisplayErrors(form, inputsByName)) return;
           const formData = new FormData(form);
-          console.log('register submit', Object.fromEntries(formData.entries()));
+          const payload = Object.fromEntries(
+            Array.from(formData.entries()).map(([key, value]) => [key, String(value)]),
+          );
+
+          try {
+            const response = await authApi.post(`${BASE_URL}/auth/signup`, {
+              headers: { 'Content-Type': 'application/json' },
+              data: JSON.stringify(payload),
+            });
+
+            if (response.status >= 200 && response.status < 300) {
+              const router = new Router('#app');
+              router.go('/messenger');
+              return;
+            }
+
+            let message = 'Ошибка регистрации';
+            try {
+              const data = JSON.parse(response.responseText) as { reason?: string };
+              if (data.reason) {
+                message = data.reason;
+              }
+            } catch {
+              // ignore JSON parse errors
+            }
+            console.error('register error', response.status, response.responseText);
+            alert(message);
+          } catch (error) {
+            console.error('register request failed', error);
+            alert('Сеть недоступна. Попробуйте позже.');
+          }
         },
       },
     });
