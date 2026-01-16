@@ -33,7 +33,7 @@ let currentUserId: number | null = null;
 Handlebars.registerHelper('eq', (left: unknown, right: unknown) => left === right);
 Handlebars.registerHelper('formatTime', (value?: string) => (value ? formatTime(value) : ''));
 Handlebars.registerHelper('chatAvatar', (value?: string | null) =>
-  value ? getResourceUrl(BASE_URL, value) : '/icon.svg',
+  value ? getResourceUrl(BASE_URL, value) : '/avatar.png',
 );
 
 type ChatItem = {
