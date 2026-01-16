@@ -18,10 +18,14 @@ import {
   createChat,
   getChatFiles,
   getChatToken,
+  getChatUsers,
   getChats,
   getUser,
   uploadResource,
+  addUsersToChat,
+  removeUsersFromChat,
 } from '../api/chats';
+import { searchUser } from '../api/user';
 
 Handlebars.registerPartial('chat-sidebar', chatSidebarPartial);
 Handlebars.registerPartial('chat-content', chatContentPartial);
@@ -35,6 +39,36 @@ Handlebars.registerHelper('formatTime', (value?: string) => (value ? formatTime(
 Handlebars.registerHelper('chatAvatar', (value?: string | null) =>
   value ? getResourceUrl(BASE_URL, value) : '/avatar.png',
 );
+Handlebars.registerHelper('hasChats', (chats?: ChatItem[]) =>
+  Array.isArray(chats) && chats.length > 0,
+);
+Handlebars.registerHelper('hasMessages', (messages?: ChatMessage[]) =>
+  Array.isArray(messages) && messages.length > 0,
+);
+Handlebars.registerHelper(
+  'chatUserName',
+  (user?: ChatUser | null, fallback?: string) => {
+    if (!user) {
+      return fallback ?? '';
+    }
+    const displayName = user.display_name?.trim();
+    if (displayName) {
+      return displayName;
+    }
+    const name = `${user.first_name ?? ''} ${user.second_name ?? ''}`.trim();
+    if (name) {
+      return name;
+    }
+    return user.login ?? fallback ?? '';
+  },
+);
+Handlebars.registerHelper('chatUserAvatar', (user?: ChatUser | null) => {
+  if (!user) {
+    return '/avatar.png';
+  }
+  return user.avatar ? getResourceUrl(BASE_URL, user.avatar) : '/avatar.png';
+});
+Handlebars.registerHelper('hasChatUser', (user?: ChatUser | null) => Boolean(user));
 
 type ChatItem = {
   id: number;
@@ -54,6 +88,14 @@ type RawChatMessage = {
   file?: { path?: string };
 };
 
+type UserSearchResult = {
+  id: number;
+  login: string;
+  display_name?: string | null;
+  first_name?: string;
+  second_name?: string;
+};
+
 type ChatMessage = {
   id: string;
   text: string;
@@ -62,11 +104,22 @@ type ChatMessage = {
   isOwn: boolean;
 };
 
+type ChatUser = {
+  id: number;
+  login: string;
+  display_name?: string | null;
+  first_name?: string;
+  second_name?: string;
+  avatar?: string | null;
+};
+
 type ChatPageProps = BlockProps & {
   chats?: ChatItem[];
   activeChat?: ActiveChat | null;
   activeChatId?: number | null;
   messages?: ChatMessage[];
+  chatUsers?: ChatUser[];
+  activeChatUser?: ChatUser | null;
   params?: Record<string, string>;
   pathname?: string;
   events?: Record<string, EventListener>;
@@ -88,6 +141,8 @@ export default class ChatPage extends Block<ChatPageProps> {
       activeChat: typedProps.activeChat ?? null,
       activeChatId: typedProps.activeChatId ?? null,
       messages: typedProps.messages ?? [],
+      chatUsers: typedProps.chatUsers ?? [],
+      activeChatUser: typedProps.activeChatUser ?? null,
     });
     const mergedEvents = {
       ...(typedProps.events ?? {}),
@@ -161,7 +216,13 @@ export default class ChatPage extends Block<ChatPageProps> {
     const rawId = this.props.params?.chatId;
     if (!rawId) {
       if (this.props.activeChatId !== null) {
-        this.setProps({ activeChatId: null, activeChat: null, messages: [] });
+        this.setProps({
+          activeChatId: null,
+          activeChat: null,
+          messages: [],
+          chatUsers: [],
+          activeChatUser: null,
+        });
       }
       this._closeSocket();
       return;
@@ -188,6 +249,28 @@ export default class ChatPage extends Block<ChatPageProps> {
       const input = root.querySelector('[data-attach-input]') as HTMLInputElement | null;
       input?.click();
       return;
+    }
+    const addUserButton = target?.closest('[data-add-user]');
+    if (addUserButton) {
+      event.preventDefault();
+      void this._addUserToChat();
+      return;
+    }
+    const removeUserButton = target?.closest('[data-remove-user]');
+    if (removeUserButton) {
+      event.preventDefault();
+      void this._removeUserFromChat();
+      this._closeChatMenu();
+      return;
+    }
+    const menuToggle = target?.closest('[data-chat-menu-toggle]');
+    if (menuToggle) {
+      event.preventDefault();
+      this._toggleChatMenu();
+      return;
+    }
+    if (this._isChatMenuOpen() && !target?.closest('[data-chat-menu-wrapper]')) {
+      this._closeChatMenu();
     }
     const item = target?.closest('[data-chat-id]') as HTMLElement | null;
     if (!item) return;
@@ -225,6 +308,60 @@ export default class ChatPage extends Block<ChatPageProps> {
     await this._loadChats();
   }
 
+  private async _addUserToChat() {
+    const chatId = this.props.activeChatId;
+    if (!chatId) {
+      return;
+    }
+    const login = window.prompt('Логин пользователя');
+    if (!login) {
+      return;
+    }
+    const response = await this._safeRequest(() => searchUser(login), 'search user');
+    if (!response || this._handleAuth(response)) return;
+    if (response.status < 200 || response.status >= 300) {
+      console.error('search user error', response.status, response.responseText);
+      return;
+    }
+    const users = JSON.parse(response.responseText) as UserSearchResult[];
+    const user = users.find((item) => item.login === login) ?? users[0];
+    if (!user) {
+      console.error('user not found');
+      return;
+    }
+    const addResponse = await this._safeRequest(
+      () => addUsersToChat(chatId, [user.id]),
+      'add users to chat',
+    );
+    if (!addResponse || this._handleAuth(addResponse)) return;
+    if (addResponse.status < 200 || addResponse.status >= 300) {
+      console.error('add users error', addResponse.status, addResponse.responseText);
+      return;
+    }
+    await this._loadChatUsers(chatId);
+  }
+
+  private async _removeUserFromChat() {
+    const chatId = this.props.activeChatId;
+    if (!chatId) {
+      return;
+    }
+    const activeUser = this.props.activeChatUser;
+    if (!activeUser) {
+      return;
+    }
+    const removeResponse = await this._safeRequest(
+      () => removeUsersFromChat(chatId, [activeUser.id]),
+      'remove users from chat',
+    );
+    if (!removeResponse || this._handleAuth(removeResponse)) return;
+    if (removeResponse.status < 200 || removeResponse.status >= 300) {
+      console.error('remove users error', removeResponse.status, removeResponse.responseText);
+      return;
+    }
+    await this._loadChatUsers(chatId);
+  }
+
   private _setActiveChat(chatId: number, options: { syncUrl: boolean }) {
     if (this.props.activeChatId === chatId && this.props.activeChat) {
       return;
@@ -239,6 +376,8 @@ export default class ChatPage extends Block<ChatPageProps> {
       activeChatId: chatId,
       activeChat: resolvedActiveChat,
       messages: [],
+      chatUsers: [],
+      activeChatUser: null,
     });
     if (resolvedActiveChat) {
       void this._connectToChat(chatId);
@@ -295,6 +434,7 @@ export default class ChatPage extends Block<ChatPageProps> {
       return;
     }
 
+    await this._loadChatUsers(chatId);
     await this._loadChatFiles(chatId);
     const response = await this._safeRequest(() => getChatToken(chatId), 'get token');
     if (!response || this._handleAuth(response)) return;
@@ -371,6 +511,36 @@ export default class ChatPage extends Block<ChatPageProps> {
     };
   }
 
+  private _selectActiveChatUser(users: ChatUser[]) {
+    const currentId = this._userId ?? currentUserId;
+    if (!users.length) {
+      return null;
+    }
+    if (currentId) {
+      const others = users.filter((user) => user.id !== currentId);
+      if (others.length > 0) {
+        return others[0] ?? null;
+      }
+      return null;
+    }
+    return users[0] ?? null;
+  }
+
+  private async _loadChatUsers(chatId: number) {
+    const response = await this._safeRequest(() => getChatUsers(chatId), 'get chat users');
+    if (!response || this._handleAuth(response)) return;
+    if (response.status < 200 || response.status >= 300) {
+      console.error('get chat users error', response.status, response.responseText);
+      return;
+    }
+
+    const users = JSON.parse(response.responseText) as ChatUser[];
+    this.setProps({
+      chatUsers: users,
+      activeChatUser: this._selectActiveChatUser(users),
+    });
+  }
+
   private async _loadChatFiles(chatId: number) {
     const response = await this._safeRequest(() => getChatFiles(chatId), 'get chat files');
     if (!response || this._handleAuth(response)) return;
@@ -424,6 +594,28 @@ export default class ChatPage extends Block<ChatPageProps> {
     }
     this._authChecked = true;
     return handleAuthResponse(response);
+  }
+
+  private _isChatMenuOpen() {
+    const root = this.getContent();
+    const menu = root.querySelector('[data-chat-menu-wrapper]');
+    return menu?.classList.contains('chat-content__menu--open') ?? false;
+  }
+
+  private _toggleChatMenu() {
+    const root = this.getContent();
+    const menu = root.querySelector('[data-chat-menu-wrapper]');
+    if (menu instanceof HTMLElement) {
+      menu.classList.toggle('chat-content__menu--open');
+    }
+  }
+
+  private _closeChatMenu() {
+    const root = this.getContent();
+    const menu = root.querySelector('[data-chat-menu-wrapper]');
+    if (menu instanceof HTMLElement) {
+      menu.classList.remove('chat-content__menu--open');
+    }
   }
 
   private _closeSocket() {

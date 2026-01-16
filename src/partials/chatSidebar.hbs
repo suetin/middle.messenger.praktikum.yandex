@@ -11,8 +11,12 @@
     </form>
   </header>
   <ul class="chat-list">
-    {{#each chats}}
-    {{> chat-sidebar-item}}
-    {{/each}}
+    {{#if (hasChats chats)}}
+      {{#each chats}}
+      {{> chat-sidebar-item}}
+      {{/each}}
+    {{else}}
+      <li class="chat-list__empty">Пока нет чатов</li>
+    {{/if}}
   </ul>
 </nav>

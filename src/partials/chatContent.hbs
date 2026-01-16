@@ -2,23 +2,46 @@
   {{#if activeChat}}
   <header class="chat-content__header">
     <div class="chat-content__info">
+      {{#if (hasChatUser activeChatUser)}}
       <img
         class="avatar avatar--sm"
-        src="{{ chatAvatar activeChat.avatar }}"
-        alt="Аватар {{ activeChat.title }}"
+        src="{{ chatUserAvatar activeChatUser }}"
+        alt="Аватар {{ chatUserName activeChatUser activeChat.title }}"
       />
       <div>
-        <h2 class="chat-content__title">{{ activeChat.title }}</h2>
+        <h2 class="chat-content__title">{{ chatUserName activeChatUser activeChat.title }}</h2>
       </div>
+      {{else}}
+      <button class="sidebar-chat-app__create-btn" type="button" data-add-user>
+        + Пользователь
+      </button>
+      {{/if}}
     </div>
     <div class="chat-content__actions">
-      <button class="chat-content__action"><img src="/settings.svg" alt="settings" /></button>
+      <div class="chat-content__menu" data-chat-menu-wrapper>
+        <button
+          class="chat-content__action chat-content__menu-toggle"
+          type="button"
+          data-chat-menu-toggle
+        >
+          <img src="/settings.svg" alt="settings" />
+        </button>
+        <div class="chat-content__menu-list" data-chat-menu>
+          <button class="chat-content__menu-item" type="button" data-remove-user>
+            Удалить из чата
+          </button>
+        </div>
+      </div>
     </div>
   </header>
   <section class="chat-content__messages">
+    {{#if (hasMessages messages)}}
     {{#each messages}}
     {{> chat-message}}
     {{/each}}
+    {{else}}
+    <div class="chat-content__empty">Сообщений пока нет</div>
+    {{/if}}
   </section>
   <footer class="chat-content__footer">
     <button class="chat-content__attach" type="button" data-attach-button>

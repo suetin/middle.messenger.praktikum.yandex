@@ -16,8 +16,28 @@ export function createChat(title: string) {
   });
 }
 
+export function addUsersToChat(chatId: number, users: number[]) {
+  return chatApi.put(`${BASE_URL}/chats/users`, {
+    headers: { 'Content-Type': 'application/json' },
+    data: JSON.stringify({ users, chatId }),
+  });
+}
+
+export function removeUsersFromChat(chatId: number, users: number[]) {
+  return chatApi.delete(`${BASE_URL}/chats/users`, {
+    headers: { 'Content-Type': 'application/json' },
+    data: JSON.stringify({ users, chatId }),
+  });
+}
+
 export function getChatToken(chatId: number) {
   return chatApi.post(`${BASE_URL}/chats/token/${chatId}`, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+export function getChatUsers(chatId: number) {
+  return chatApi.get(`${BASE_URL}/chats/${chatId}/users`, {
     headers: { 'Content-Type': 'application/json' },
   });
 }

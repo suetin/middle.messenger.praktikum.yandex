@@ -30,3 +30,10 @@ export function updateAvatar(file: File) {
     data: formData,
   });
 }
+
+export function searchUser(login: string) {
+  return userApi.post(`${BASE_URL}/user/search`, {
+    headers: { 'Content-Type': 'application/json' },
+    data: JSON.stringify({ login }),
+  });
+}
