@@ -70,7 +70,7 @@ export default class LoginPage extends Block {
             });
 
             if (response.status >= 200 && response.status < 300) {
-              const router = new Router('#app');
+              const router = Router.getInstance('#app');
               router.setAuth(true);
               router.go('/messenger');
               return;

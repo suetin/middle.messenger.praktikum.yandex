@@ -10,7 +10,7 @@ import ProfilePasswordPage from './pages/profilePassword';
 import NotFoundPage from './pages/404';
 import ServerErrorPage from './pages/500';
 
-const router = new Router('#app');
+const router = Router.getInstance('#app');
 const BASE_URL = 'https://ya-praktikum.tech/api/v2';
 const authApi = new HTTPTransport();
 

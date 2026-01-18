@@ -32,8 +32,8 @@ export default class Button extends Block<Props> {
 
   private getViewModel() {
     const { text, icon, variant, ariaLabel, ...rest } = this.props;
-    const iconHtml = icon ? `<img src="${icon}" alt="${ariaLabel ?? ''}" />` : null;
-    const content = iconHtml ?? text ?? '';
+    const iconHtml = icon ? `<img src="${icon}" alt="${ariaLabel}" />` : null;
+    const content = iconHtml ?? text;
     const isIcon = variant === 'icon' || (!!icon && !text);
     return {
       ...rest,

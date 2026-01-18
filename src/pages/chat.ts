@@ -13,6 +13,7 @@ import Input from '../components/Input';
 import Button from '../components/Button';
 import { getResourceUrl } from '../lib/resourceUrl';
 import { formatTime } from '../lib/formatters';
+import { isSuccessful, safeRequest } from '../lib/http';
 import { BASE_URL } from '../api/base';
 import {
   createChat,
@@ -27,60 +28,20 @@ import {
 } from '../api/chats';
 import { searchUser } from '../api/user';
 
-Handlebars.registerPartial('chat-sidebar', chatSidebarPartial);
-Handlebars.registerPartial('chat-content', chatContentPartial);
-Handlebars.registerPartial('chat-message', chatMessagePartial);
-Handlebars.registerPartial('chat-sidebar-item', chatSidebarItem);
-
 let currentUserId: number | null = null;
-
-Handlebars.registerHelper('eq', (left: unknown, right: unknown) => left === right);
-Handlebars.registerHelper('formatTime', (value?: string) => (value ? formatTime(value) : ''));
-Handlebars.registerHelper('chatAvatar', (value?: string | null) =>
-  value ? getResourceUrl(BASE_URL, value) : '/avatar.png',
-);
-Handlebars.registerHelper('hasChats', (chats?: ChatItem[]) =>
-  Array.isArray(chats) && chats.length > 0,
-);
-Handlebars.registerHelper('hasMessages', (messages?: ChatMessage[]) =>
-  Array.isArray(messages) && messages.length > 0,
-);
-Handlebars.registerHelper(
-  'chatUserName',
-  (user?: ChatUser | null, fallback?: string) => {
-    if (!user) {
-      return fallback ?? '';
-    }
-    const displayName = user.display_name?.trim();
-    if (displayName) {
-      return displayName;
-    }
-    const name = `${user.first_name ?? ''} ${user.second_name ?? ''}`.trim();
-    if (name) {
-      return name;
-    }
-    return user.login ?? fallback ?? '';
-  },
-);
-Handlebars.registerHelper('chatUserAvatar', (user?: ChatUser | null) => {
-  if (!user) {
-    return '/avatar.png';
-  }
-  return user.avatar ? getResourceUrl(BASE_URL, user.avatar) : '/avatar.png';
-});
-Handlebars.registerHelper('hasChatUser', (user?: ChatUser | null) => Boolean(user));
 
 type ChatItem = {
   id: number;
   title: string;
   avatar: string | null;
   unread_count: number;
-  last_message?: { content?: string; time?: string };
+  last_message: { content: string; time: string };
 };
 
 type ActiveChat = ChatItem;
 
 type RawChatMessage = {
+  id?: number;
   type?: string;
   content?: unknown;
   time?: unknown;
@@ -91,9 +52,12 @@ type RawChatMessage = {
 type UserSearchResult = {
   id: number;
   login: string;
-  display_name?: string | null;
-  first_name?: string;
-  second_name?: string;
+  display_name: string;
+  first_name: string;
+  second_name: string;
+  phone: string;
+  avatar: string;
+  email: string;
 };
 
 type ChatMessage = {
@@ -107,23 +71,61 @@ type ChatMessage = {
 type ChatUser = {
   id: number;
   login: string;
-  display_name?: string | null;
-  first_name?: string;
-  second_name?: string;
-  avatar?: string | null;
+  display_name: string | null;
+  first_name: string;
+  second_name: string;
+  avatar: string | null;
+  role: string;
 };
 
 type ChatPageProps = BlockProps & {
-  chats?: ChatItem[];
-  activeChat?: ActiveChat | null;
-  activeChatId?: number | null;
-  messages?: ChatMessage[];
-  chatUsers?: ChatUser[];
-  activeChatUser?: ChatUser | null;
+  chats: ChatItem[];
+  activeChat: ActiveChat | null;
+  activeChatId: number | null;
+  messages: ChatMessage[];
+  chatUsers: ChatUser[];
+  activeChatUser: ChatUser | null;
   params?: Record<string, string>;
   pathname?: string;
   events?: Record<string, EventListener>;
 };
+
+const DEFAULT_AVATAR = '/avatar.png';
+
+const getChatAvatarUrl = (value?: string | null) =>
+  value ? getResourceUrl(BASE_URL, value) : DEFAULT_AVATAR;
+
+const getChatUserName = (user?: ChatUser | null) => {
+  if (!user) {
+    return '';
+  }
+  const firstName = user.first_name.trim();
+  const lastName = user.second_name.trim();
+  if (firstName && lastName) {
+    return `${firstName} ${lastName}`;
+  }
+  if (firstName) {
+    return firstName;
+  }
+  return user.display_name ?? user.login;
+};
+
+const getChatUserAvatarUrl = (user?: ChatUser | null) => {
+  if (!user || !user.avatar) {
+    return DEFAULT_AVATAR;
+  }
+  return getResourceUrl(BASE_URL, user.avatar);
+};
+
+Handlebars.registerPartial('chat-sidebar', chatSidebarPartial);
+Handlebars.registerPartial('chat-content', chatContentPartial);
+Handlebars.registerPartial('chat-message', chatMessagePartial);
+Handlebars.registerPartial('chat-sidebar-item', chatSidebarItem);
+Handlebars.registerHelper('eq', (left: unknown, right: unknown) => left === right);
+Handlebars.registerHelper('formatTime', (value?: string) => formatTime(String(value)));
+Handlebars.registerHelper('chatAvatar', (value?: string | null) => getChatAvatarUrl(value));
+Handlebars.registerHelper('chatUserName', (user?: ChatUser | null) => getChatUserName(user));
+Handlebars.registerHelper('chatUserAvatar', (user?: ChatUser | null) => getChatUserAvatarUrl(user));
 
 export default class ChatPage extends Block<ChatPageProps> {
   private _components: Record<string, Input | Button> = {};
@@ -135,7 +137,7 @@ export default class ChatPage extends Block<ChatPageProps> {
 
   constructor(tagName: string = 'div', props: BlockProps = {}) {
     const typedProps = props as ChatPageProps;
-    super(tagName, {
+    const baseProps = {
       ...typedProps,
       chats: typedProps.chats ?? [],
       activeChat: typedProps.activeChat ?? null,
@@ -143,7 +145,8 @@ export default class ChatPage extends Block<ChatPageProps> {
       messages: typedProps.messages ?? [],
       chatUsers: typedProps.chatUsers ?? [],
       activeChatUser: typedProps.activeChatUser ?? null,
-    });
+    };
+    super(tagName, baseProps);
     const mergedEvents = {
       ...(typedProps.events ?? {}),
       click: (event: Event) => {
@@ -160,12 +163,6 @@ export default class ChatPage extends Block<ChatPageProps> {
     if (this._componentsInitialized) {
       return;
     }
-    const searchIcon = `
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="2" />
-        <line x1="15.4142" y1="15" x2="20" y2="19.5858" stroke="currentColor" stroke-width="2" />
-      </svg>
-    `;
 
     const messageInput = new Input({
       name: 'message',
@@ -173,29 +170,36 @@ export default class ChatPage extends Block<ChatPageProps> {
       variant: 'filled',
       className: 'chat-content__input',
     });
+
+    const searchIcon = '<img src="/search.svg" alt="" />';
     const chatSearch = new Input({
       name: 'search',
       placeholder: 'Поиск',
       variant: 'filled',
       icon: searchIcon,
     });
+
+    const sendButton = new Button({
+      icon: '/send.svg',
+      ariaLabel: 'Отправить сообщение',
+      variant: 'icon',
+      className: 'chat-content__send',
+      events: {
+        click: (event: Event) => {
+          event.preventDefault();
+          const root = this.getContent();
+          const form = root.querySelector('.chat-content__form') as HTMLFormElement | null;
+          if (!form) return;
+          this._sendMessage(messageInput.value);
+          messageInput.setValue('');
+        },
+      },
+    });
+
     this._components = {
       'chat-search': chatSearch,
       'message-input': messageInput,
-      'send-button': new Button({
-        icon: '/send.svg',
-        variant: 'icon',
-        className: 'chat-content__send',
-        events: {
-          click: (event: Event) => {
-            event.preventDefault();
-            const form = document.querySelector('.chat-content__form') as HTMLFormElement | null;
-            if (!form) return;
-            this._sendMessage(messageInput.value);
-            messageInput.setValue('');
-          },
-        },
-      }),
+      'send-button': sendButton,
     };
     this._componentsInitialized = true;
   }
@@ -278,6 +282,7 @@ export default class ChatPage extends Block<ChatPageProps> {
     if (!id) return;
     const chatId = Number(id);
     if (!Number.isFinite(chatId)) return;
+    this._clearUnreadCount(chatId);
     this._setActiveChat(chatId, { syncUrl: true });
   };
 
@@ -299,12 +304,9 @@ export default class ChatPage extends Block<ChatPageProps> {
     if (!title) {
       return;
     }
-    const response = await this._safeRequest(() => createChat(title), 'create chat');
+    const response = await safeRequest(() => createChat(title), 'create chat');
     if (!response || this._handleAuth(response)) return;
-    if (response.status < 200 || response.status >= 300) {
-      console.error('create chat error', response.status, response.responseText);
-      return;
-    }
+    if (!isSuccessful(response, 'create chat')) return;
     await this._loadChats();
   }
 
@@ -317,27 +319,21 @@ export default class ChatPage extends Block<ChatPageProps> {
     if (!login) {
       return;
     }
-    const response = await this._safeRequest(() => searchUser(login), 'search user');
+    const response = await safeRequest(() => searchUser(login), 'search user');
     if (!response || this._handleAuth(response)) return;
-    if (response.status < 200 || response.status >= 300) {
-      console.error('search user error', response.status, response.responseText);
-      return;
-    }
+    if (!isSuccessful(response, 'search user')) return;
     const users = JSON.parse(response.responseText) as UserSearchResult[];
     const user = users.find((item) => item.login === login) ?? users[0];
     if (!user) {
       console.error('user not found');
       return;
     }
-    const addResponse = await this._safeRequest(
+    const addResponse = await safeRequest(
       () => addUsersToChat(chatId, [user.id]),
       'add users to chat',
     );
     if (!addResponse || this._handleAuth(addResponse)) return;
-    if (addResponse.status < 200 || addResponse.status >= 300) {
-      console.error('add users error', addResponse.status, addResponse.responseText);
-      return;
-    }
+    if (!isSuccessful(addResponse, 'add users')) return;
     await this._loadChatUsers(chatId);
   }
 
@@ -350,15 +346,12 @@ export default class ChatPage extends Block<ChatPageProps> {
     if (!activeUser) {
       return;
     }
-    const removeResponse = await this._safeRequest(
+    const removeResponse = await safeRequest(
       () => removeUsersFromChat(chatId, [activeUser.id]),
       'remove users from chat',
     );
     if (!removeResponse || this._handleAuth(removeResponse)) return;
-    if (removeResponse.status < 200 || removeResponse.status >= 300) {
-      console.error('remove users error', removeResponse.status, removeResponse.responseText);
-      return;
-    }
+    if (!isSuccessful(removeResponse, 'remove users')) return;
     await this._loadChatUsers(chatId);
   }
 
@@ -366,31 +359,36 @@ export default class ChatPage extends Block<ChatPageProps> {
     if (this.props.activeChatId === chatId && this.props.activeChat) {
       return;
     }
-    const chats = this.props.chats ?? [];
+    const chats = this.props.chats;
     const activeChat = chats.find((chat) => chat.id === chatId) ?? null;
     if (options.syncUrl) {
       window.history.pushState({}, '', `/messenger/${chatId}`);
     }
-    const resolvedActiveChat = activeChat ?? null;
+    this._resourcePaths.clear();
     this.setProps({
       activeChatId: chatId,
-      activeChat: resolvedActiveChat,
+      activeChat,
       messages: [],
       chatUsers: [],
       activeChatUser: null,
     });
-    if (resolvedActiveChat) {
+    if (activeChat) {
       void this._connectToChat(chatId);
     }
   }
 
+  private _clearUnreadCount(chatId: number) {
+    const chats = this.props.chats;
+    const nextChats = chats.map((chat) =>
+      chat.id === chatId ? { ...chat, unread_count: 0 } : chat,
+    );
+    this.setProps({ chats: nextChats });
+  }
+
   private async _loadChats() {
-    const response = await this._safeRequest(() => getChats(), 'get chats');
+    const response = await safeRequest(() => getChats(), 'get chats');
     if (!response || this._handleAuth(response)) return;
-    if (response.status < 200 || response.status >= 300) {
-      console.error('get chats error', response.status, response.responseText);
-      return;
-    }
+    if (!isSuccessful(response, 'get chats')) return;
 
     const chats = JSON.parse(response.responseText) as ChatItem[];
     this.setProps({ chats });
@@ -410,12 +408,9 @@ export default class ChatPage extends Block<ChatPageProps> {
   }
 
   private async _uploadFile(file: File) {
-    const response = await this._safeRequest(() => uploadResource(file), 'upload file');
+    const response = await safeRequest(() => uploadResource(file), 'upload file');
     if (!response || this._handleAuth(response)) return;
-    if (response.status < 200 || response.status >= 300) {
-      console.error('upload file error', response.status, response.responseText);
-      return;
-    }
+    if (!isSuccessful(response, 'upload file')) return;
 
     const data = JSON.parse(response.responseText) as { id?: number; path?: string };
     if (typeof data.id === 'number') {
@@ -436,12 +431,9 @@ export default class ChatPage extends Block<ChatPageProps> {
 
     await this._loadChatUsers(chatId);
     await this._loadChatFiles(chatId);
-    const response = await this._safeRequest(() => getChatToken(chatId), 'get token');
+    const response = await safeRequest(() => getChatToken(chatId), 'get token');
     if (!response || this._handleAuth(response)) return;
-    if (response.status < 200 || response.status >= 300) {
-      console.error('get token error', response.status, response.responseText);
-      return;
-    }
+    if (!isSuccessful(response, 'get token')) return;
 
     const data = JSON.parse(response.responseText) as { token: string };
     this._socket = new ChatSocket({
@@ -472,7 +464,7 @@ export default class ChatPage extends Block<ChatPageProps> {
       return;
     }
 
-    const current = this.props.messages ?? [];
+    const current = this.props.messages;
     this.setProps({
       messages: [...current, this._normalizeMessage(payload)],
     });
@@ -487,6 +479,7 @@ export default class ChatPage extends Block<ChatPageProps> {
   }
 
   private _normalizeMessage(message: RawChatMessage): ChatMessage {
+    const resolvedId = String(message.id ?? '');
     const type = String(message.type ?? '');
     if (type === 'file') {
       const file = message.file;
@@ -495,7 +488,7 @@ export default class ChatPage extends Block<ChatPageProps> {
         ? getResourceUrl(BASE_URL, file.path)
         : getResourceUrl(BASE_URL, content, this._resourcePaths);
       return {
-        id: `m-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        id: resolvedId,
         image,
         text: '',
         isOwn: message.user_id === currentUserId,
@@ -503,7 +496,7 @@ export default class ChatPage extends Block<ChatPageProps> {
       };
     }
     return {
-      id: `m-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      id: resolvedId,
       text: String(message.content ?? ''),
       image: '',
       isOwn: message.user_id === currentUserId,
@@ -521,18 +514,15 @@ export default class ChatPage extends Block<ChatPageProps> {
       if (others.length > 0) {
         return others[0] ?? null;
       }
-      return null;
+      return users[0] ?? null;
     }
     return users[0] ?? null;
   }
 
   private async _loadChatUsers(chatId: number) {
-    const response = await this._safeRequest(() => getChatUsers(chatId), 'get chat users');
+    const response = await safeRequest(() => getChatUsers(chatId), 'get chat users');
     if (!response || this._handleAuth(response)) return;
-    if (response.status < 200 || response.status >= 300) {
-      console.error('get chat users error', response.status, response.responseText);
-      return;
-    }
+    if (!isSuccessful(response, 'get chat users')) return;
 
     const users = JSON.parse(response.responseText) as ChatUser[];
     this.setProps({
@@ -542,12 +532,9 @@ export default class ChatPage extends Block<ChatPageProps> {
   }
 
   private async _loadChatFiles(chatId: number) {
-    const response = await this._safeRequest(() => getChatFiles(chatId), 'get chat files');
+    const response = await safeRequest(() => getChatFiles(chatId), 'get chat files');
     if (!response || this._handleAuth(response)) return;
-    if (response.status < 200 || response.status >= 300) {
-      console.error('get chat files error', response.status, response.responseText);
-      return;
-    }
+    if (!isSuccessful(response, 'get chat files')) return;
 
     const files = JSON.parse(response.responseText) as Array<{ id?: number; path?: string }>;
     files.forEach((file) => {
@@ -561,12 +548,9 @@ export default class ChatPage extends Block<ChatPageProps> {
     if (this._userId) {
       return this._userId;
     }
-    const response = await this._safeRequest(() => getUser(), 'get user');
+    const response = await safeRequest(() => getUser(), 'get user');
     if (!response || this._handleAuth(response)) return null;
-    if (response.status < 200 || response.status >= 300) {
-      console.error('get user error', response.status, response.responseText);
-      return null;
-    }
+    if (!isSuccessful(response, 'get user')) return null;
     const data = JSON.parse(response.responseText) as { id?: number };
     if (typeof data.id === 'number') {
       this._userId = data.id;
@@ -576,25 +560,14 @@ export default class ChatPage extends Block<ChatPageProps> {
     return null;
   }
 
-  private async _safeRequest(
-    request: () => Promise<XMLHttpRequest>,
-    label: string,
-  ): Promise<XMLHttpRequest | null> {
-    try {
-      return await request();
-    } catch (error) {
-      console.error(`${label} request failed`, error);
-      return null;
-    }
-  }
 
   private _handleAuth(response: XMLHttpRequest) {
-    if (this._authChecked) {
-      return handleAuthResponse(response);
+    if (!this._authChecked) {
+      this._authChecked = true;
     }
-    this._authChecked = true;
     return handleAuthResponse(response);
   }
+
 
   private _isChatMenuOpen() {
     const root = this.getContent();

@@ -1,7 +1,7 @@
-@import './tokens.css';
-@import './base.css';
-@import './utilities.css';
-@import './components.css';
-@import './forms.css';
-@import './chat.css';
-@import './profile.css';
+@import url('./tokens.css');
+@import url('./base.css');
+@import url('./utilities.css');
+@import url('./components.css');
+@import url('./forms.css');
+@import url('./chat.css');
+@import url('./profile.css');

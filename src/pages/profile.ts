@@ -9,6 +9,7 @@ import { BASE_URL } from '../api/base';
 import { getUser } from '../api/user';
 import { handleAuthResponse } from '../lib/apiGuard';
 import { bindAvatarModal } from '../lib/avatarModal';
+import { isSuccessful, safeRequest } from '../lib/http';
 import { getResourceUrl } from '../lib/resourceUrl';
 
 Handlebars.registerPartial('back-to', backToTemplate);
@@ -74,18 +75,16 @@ export default class ProfilePage extends Block {
       logoutLink.addEventListener('click', async (event) => {
         event.preventDefault();
         const authApi = new HTTPTransport();
-        try {
-          const response = await authApi.post(`${BASE_URL}/auth/logout`);
-          if (response.status >= 200 && response.status < 300) {
-            const router = new Router('#app');
-            router.setAuth(false);
-            router.go('/');
-            return;
-          }
-          console.error('logout error', response.status, response.responseText);
-        } catch (error) {
-          console.error('logout request failed', error);
+        const response = await safeRequest(() => authApi.post(`${BASE_URL}/auth/logout`), 'logout');
+        if (!response) {
+          return;
         }
+        if (!isSuccessful(response, 'logout')) {
+          return;
+        }
+        const router = Router.getInstance('#app');
+        router.setAuth(false);
+        router.go('/');
       });
     }
   }
@@ -120,21 +119,16 @@ export default class ProfilePage extends Block {
   }
 
   private async _loadUser() {
-    try {
-      const response = await getUser();
-      if (handleAuthResponse(response)) {
-        return;
-      }
-      if (response.status < 200 || response.status >= 300) {
-        console.error('get user error', response.status, response.responseText);
-        return;
-      }
-      const data = JSON.parse(response.responseText || '{}') as UserProfile;
-      if (data?.id) {
-        this._applyUser(data);
-      }
-    } catch (error) {
-      console.error('get user request failed', error);
+    const response = await safeRequest(() => getUser(), 'get user');
+    if (!response || handleAuthResponse(response)) {
+      return;
+    }
+    if (!isSuccessful(response, 'get user')) {
+      return;
+    }
+    const data = JSON.parse(response.responseText) as UserProfile;
+    if (data?.id) {
+      this._applyUser(data);
     }
   }
 }

@@ -12,6 +12,7 @@ import { getUser, updateProfile } from '../api/user';
 import { handleAuthResponse } from '../lib/apiGuard';
 import Router from '../lib/router/Router';
 import { bindAvatarModal } from '../lib/avatarModal';
+import { isSuccessful, safeRequest } from '../lib/http';
 import { BASE_URL } from '../api/base';
 import { getResourceUrl } from '../lib/resourceUrl';
 
@@ -104,20 +105,15 @@ export default class ProfileEditPage extends Block<ProfileEditProps> {
               payload[key] = value;
             }
           });
-          try {
-            const response = await updateProfile(payload);
-            if (handleAuthResponse(response)) {
-              return;
-            }
-            if (response.status < 200 || response.status >= 300) {
-              console.error('update profile error', response.status, response.responseText);
-              return;
-            }
-            const router = new Router('#app');
-            router.go('/settings');
-          } catch (error) {
-            console.error('update profile request failed', error);
+          const response = await safeRequest(() => updateProfile(payload), 'update profile');
+          if (!response || handleAuthResponse(response)) {
+            return;
           }
+          if (!isSuccessful(response, 'update profile')) {
+            return;
+          }
+          const router = Router.getInstance('#app');
+          router.go('/settings');
         },
       },
     });
@@ -181,21 +177,16 @@ export default class ProfileEditPage extends Block<ProfileEditProps> {
   }
 
   private async _loadUser() {
-    try {
-      const response = await getUser();
-      if (handleAuthResponse(response)) {
-        return;
-      }
-      if (response.status < 200 || response.status >= 300) {
-        console.error('get user error', response.status, response.responseText);
-        return;
-      }
-      const data = JSON.parse(response.responseText || '{}') as UserProfile;
-      if (data?.id) {
-        this.setProps({ user: data });
-      }
-    } catch (error) {
-      console.error('get user request failed', error);
+    const response = await safeRequest(() => getUser(), 'get user');
+    if (!response || handleAuthResponse(response)) {
+      return;
+    }
+    if (!isSuccessful(response, 'get user')) {
+      return;
+    }
+    const data = JSON.parse(response.responseText) as UserProfile;
+    if (data?.id) {
+      this.setProps({ user: data });
     }
   }
 }

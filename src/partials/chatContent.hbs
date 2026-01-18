@@ -2,14 +2,14 @@
   {{#if activeChat}}
   <header class="chat-content__header">
     <div class="chat-content__info">
-      {{#if (hasChatUser activeChatUser)}}
+      {{#if activeChatUser}}
       <img
         class="avatar avatar--sm"
         src="{{ chatUserAvatar activeChatUser }}"
-        alt="Аватар {{ chatUserName activeChatUser activeChat.title }}"
+        alt="Аватар {{ chatUserName activeChatUser }}"
       />
       <div>
-        <h2 class="chat-content__title">{{ chatUserName activeChatUser activeChat.title }}</h2>
+        <h2 class="chat-content__title">{{ chatUserName activeChatUser }}</h2>
       </div>
       {{else}}
       <button class="sidebar-chat-app__create-btn" type="button" data-add-user>
@@ -35,7 +35,7 @@
     </div>
   </header>
   <section class="chat-content__messages">
-    {{#if (hasMessages messages)}}
+    {{#if messages.length}}
     {{#each messages}}
     {{> chat-message}}
     {{/each}}
@@ -47,7 +47,7 @@
     <button class="chat-content__attach" type="button" data-attach-button>
       <img src="/attach.svg" alt="attach" />
     </button>
-    <input class="chat-content__file-input" type="file" data-attach-input />
+    <input class="chat-content__file-input" type="file" data-attach-input accept="image/*" />
     <form class="chat-content__form" aria-label="Отправка сообщения">
       <div class="chat-content__input" data-component="message-input"></div>
       <div data-component="send-button"></div>

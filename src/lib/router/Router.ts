@@ -25,15 +25,17 @@ export default class Router {
   private _isAuthenticated = false;
   private _authGuard: AuthGuardOptions | null = null;
 
-  constructor(rootQuery: string | RouterOptions) {
+  static getInstance(rootQuery: string | RouterOptions) {
     if (Router.__instance) {
       return Router.__instance;
     }
+    Router.__instance = new Router(rootQuery);
+    return Router.__instance;
+  }
 
+  private constructor(rootQuery: string | RouterOptions) {
     const options = typeof rootQuery === 'string' ? { rootQuery } : rootQuery;
     this._rootQuery = options.rootQuery;
-
-    Router.__instance = this;
   }
 
   use(pathname: string, block: BlockConstructor) {

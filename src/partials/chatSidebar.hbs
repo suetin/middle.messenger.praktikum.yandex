@@ -11,7 +11,7 @@
     </form>
   </header>
   <ul class="chat-list">
-    {{#if (hasChats chats)}}
+    {{#if chats.length}}
       {{#each chats}}
       {{> chat-sidebar-item}}
       {{/each}}
