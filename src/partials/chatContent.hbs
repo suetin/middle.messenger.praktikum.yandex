@@ -12,6 +12,8 @@
         </button>
         <div class="chat-content__chat-meta">
           <h2 class="chat-content__title">{{ activeChat.title }}</h2>
+        </div>
+      </div>
       {{#if chatUsers.length}}
       <div class="chat-content__participants" aria-label="Участники чата">
         {{#each chatUsers}}
@@ -32,15 +34,17 @@
           </button>
         </span>
         {{/each}}
+        <button
+          class="chat-content__participants-add"
+          type="button"
+          data-add-user
+        >
+          + Пользователь
+        </button>
       </div>
       {{/if}}
-        </div>
-      </div>
     </div>
     <div class="chat-content__actions">
-      <button class="chat-content__action chat-content__action--left" type="button" data-add-user>
-        + Пользователь
-      </button>
       <div class="chat-content__menu" data-chat-menu-wrapper>
         <button
           class="chat-content__action chat-content__menu-toggle"

@@ -166,7 +166,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  flex: 1;
+  flex: 0 0 auto;
   min-width: 0;
 }
 
@@ -197,10 +197,29 @@
   flex-wrap: nowrap;
   gap: 6px;
   align-items: center;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   overflow: auto hidden;
   white-space: nowrap;
-  padding: 6px 0;
+  padding: 6px 10px;
+  border: 1px solid var(--chat-border-grey);
+  border-radius: 999px;
+  background-color: #fff;
+}
+
+.chat-content__participants-add {
+  margin-left: auto;
+  border: none;
+  background-color: transparent;
+  color: var(--chat-link);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+.chat-content__participants-add:hover {
+  color: var(--chat-link-hover);
 }
 
 .chat-content__user {
