@@ -2,22 +2,33 @@
   {{#if activeChat}}
   <header class="chat-content__header">
     <div class="chat-content__info">
-      {{#if activeChatUser}}
-      <img
-        class="avatar avatar--sm"
-        src="{{ chatUserAvatar activeChatUser }}"
-        alt="Аватар {{ chatUserName activeChatUser }}"
-      />
-      <div>
-        <h2 class="chat-content__title">{{ chatUserName activeChatUser }}</h2>
+      {{#if chatUsers.length}}
+      <div class="chat-content__participants" aria-label="Участники чата">
+        {{#each chatUsers}}
+        <span class="chat-content__user">
+          <img
+            class="avatar chat-content__user-avatar"
+            src="{{ chatUserAvatar this }}"
+            alt="Аватар {{ chatUserName this }}"
+          />
+          <span class="chat-content__user-name">{{ chatUserName this }}</span>
+          <button
+            class="chat-content__user-remove"
+            type="button"
+            aria-label="Удалить пользователя"
+            data-remove-user-id="{{ id }}"
+          >
+            ✕
+          </button>
+        </span>
+        {{/each}}
       </div>
-      {{else}}
-      <button class="sidebar-chat-app__create-btn" type="button" data-add-user>
-        + Пользователь
-      </button>
       {{/if}}
     </div>
     <div class="chat-content__actions">
+      <button class="chat-content__action chat-content__action--left" type="button" data-add-user>
+        + Пользователь
+      </button>
       <div class="chat-content__menu" data-chat-menu-wrapper>
         <button
           class="chat-content__action chat-content__menu-toggle"
@@ -27,8 +38,8 @@
           <img src="/settings.svg" alt="settings" />
         </button>
         <div class="chat-content__menu-list" data-chat-menu>
-          <button class="chat-content__menu-item" type="button" data-remove-user>
-            Удалить из чата
+          <button class="chat-content__menu-item" type="button" data-delete-chat>
+            Удалить чат
           </button>
         </div>
       </div>

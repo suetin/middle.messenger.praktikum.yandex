@@ -16,6 +16,13 @@ export function createChat(title: string) {
   });
 }
 
+export function deleteChat(chatId: number) {
+  return chatApi.delete(`${BASE_URL}/chats`, {
+    headers: { 'Content-Type': 'application/json' },
+    data: JSON.stringify({ chatId }),
+  });
+}
+
 export function addUsersToChat(chatId: number, users: number[]) {
   return chatApi.put(`${BASE_URL}/chats/users`, {
     headers: { 'Content-Type': 'application/json' },

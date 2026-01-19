@@ -4,6 +4,7 @@ import chatSidebarPartial from '../partials/chatSidebar.hbs?raw';
 import chatSidebarItem from '../partials/chatSidebarItem.hbs?raw';
 import chatContentPartial from '../partials/chatContent.hbs?raw';
 import chatMessagePartial from '../partials/chatMessage.hbs?raw';
+import chatUsersModalPartial from '../partials/chatUsersModal.hbs?raw';
 import Block from '../lib/Block';
 import type { BlockProps } from '../lib/Block';
 import { handleAuthResponse } from '../lib/apiGuard';
@@ -25,6 +26,7 @@ import {
   uploadResource,
   addUsersToChat,
   removeUsersFromChat,
+  deleteChat,
 } from '../api/chats';
 import { searchUser } from '../api/user';
 
@@ -60,6 +62,11 @@ type UserSearchResult = {
   email: string;
 };
 
+type UserSearchViewItem = UserSearchResult & {
+  inChat: boolean;
+  added: boolean;
+};
+
 type ChatMessage = {
   id: string;
   text: string;
@@ -85,6 +92,10 @@ type ChatPageProps = BlockProps & {
   messages: ChatMessage[];
   chatUsers: ChatUser[];
   activeChatUser: ChatUser | null;
+  isUserModalOpen: boolean;
+  userSearchQuery: string;
+  userSearchResults: UserSearchViewItem[];
+  userSearchAddedIds: number[];
   params?: Record<string, string>;
   pathname?: string;
   events?: Record<string, EventListener>;
@@ -121,6 +132,7 @@ Handlebars.registerPartial('chat-sidebar', chatSidebarPartial);
 Handlebars.registerPartial('chat-content', chatContentPartial);
 Handlebars.registerPartial('chat-message', chatMessagePartial);
 Handlebars.registerPartial('chat-sidebar-item', chatSidebarItem);
+Handlebars.registerPartial('chat-users-modal', chatUsersModalPartial);
 Handlebars.registerHelper('eq', (left: unknown, right: unknown) => left === right);
 Handlebars.registerHelper('formatTime', (value?: string) => formatTime(String(value)));
 Handlebars.registerHelper('chatAvatar', (value?: string | null) => getChatAvatarUrl(value));
@@ -145,6 +157,10 @@ export default class ChatPage extends Block<ChatPageProps> {
       messages: typedProps.messages ?? [],
       chatUsers: typedProps.chatUsers ?? [],
       activeChatUser: typedProps.activeChatUser ?? null,
+      isUserModalOpen: typedProps.isUserModalOpen ?? false,
+      userSearchQuery: typedProps.userSearchQuery ?? '',
+      userSearchResults: typedProps.userSearchResults ?? [],
+      userSearchAddedIds: typedProps.userSearchAddedIds ?? [],
     };
     super(tagName, baseProps);
     const mergedEvents = {
@@ -154,6 +170,9 @@ export default class ChatPage extends Block<ChatPageProps> {
       },
       change: (event: Event) => {
         this._handleFileChange(event);
+      },
+      submit: (event: Event) => {
+        this._handleFormSubmit(event);
       },
     };
     this.setProps({ events: mergedEvents });
@@ -226,6 +245,10 @@ export default class ChatPage extends Block<ChatPageProps> {
           messages: [],
           chatUsers: [],
           activeChatUser: null,
+          isUserModalOpen: false,
+          userSearchQuery: '',
+          userSearchResults: [],
+          userSearchAddedIds: [],
         });
       }
       this._closeSocket();
@@ -257,14 +280,45 @@ export default class ChatPage extends Block<ChatPageProps> {
     const addUserButton = target?.closest('[data-add-user]');
     if (addUserButton) {
       event.preventDefault();
-      void this._addUserToChat();
+      this._openUserModal();
       return;
     }
-    const removeUserButton = target?.closest('[data-remove-user]');
+    const removeUserButton = target?.closest('[data-remove-user-id]');
     if (removeUserButton) {
       event.preventDefault();
-      void this._removeUserFromChat();
+      const id = (removeUserButton as HTMLElement).dataset.removeUserId;
+      const userId = id ? Number(id) : null;
+      if (userId && Number.isFinite(userId)) {
+        void this._removeUserFromChat(userId);
+      }
       this._closeChatMenu();
+      return;
+    }
+    const modalCloseButton = target?.closest('[data-user-modal-close]');
+    if (modalCloseButton) {
+      event.preventDefault();
+      this._closeUserModal();
+      return;
+    }
+    const modalAddButton = target?.closest('[data-add-user-id]');
+    if (modalAddButton) {
+      event.preventDefault();
+      const id = (modalAddButton as HTMLElement).dataset.addUserId;
+      const userId = id ? Number(id) : null;
+      if (userId && Number.isFinite(userId)) {
+        void this._addUserIdToChat(userId);
+      }
+      return;
+    }
+    const deleteChatButton = target?.closest('[data-delete-chat]');
+    if (deleteChatButton) {
+      event.preventDefault();
+      void this._deleteActiveChat();
+      this._closeChatMenu();
+      return;
+    }
+    if (target?.matches('[data-user-modal]') && this.props.isUserModalOpen) {
+      this._closeUserModal();
       return;
     }
     const menuToggle = target?.closest('[data-chat-menu-toggle]');
@@ -310,49 +364,128 @@ export default class ChatPage extends Block<ChatPageProps> {
     await this._loadChats();
   }
 
-  private async _addUserToChat() {
+  private _openUserModal() {
+    this.setProps({
+      isUserModalOpen: true,
+      userSearchQuery: '',
+      userSearchResults: [],
+      userSearchAddedIds: [],
+    });
+  }
+
+  private _closeUserModal() {
+    this.setProps({ isUserModalOpen: false });
+  }
+
+  private _handleFormSubmit(event: Event) {
+    const target = event.target as HTMLElement | null;
+    if (!target || !target.matches('[data-user-search-form]')) {
+      return;
+    }
+    event.preventDefault();
+    const form = target as HTMLFormElement;
+    const input = form.querySelector('[name="user-search"]') as HTMLInputElement | null;
+    const query = input?.value.trim() ?? '';
+    if (!query) {
+      this.setProps({ userSearchResults: [], userSearchQuery: '' });
+      return;
+    }
+    void this._searchUsers(query);
+  }
+
+  private async _searchUsers(query: string) {
+    const response = await safeRequest(() => searchUser(query), 'search user');
+    if (!response || this._handleAuth(response)) return;
+    if (!isSuccessful(response, 'search user')) return;
+    const users = JSON.parse(response.responseText) as UserSearchResult[];
+    const chatUserIds = new Set(this.props.chatUsers.map((user) => user.id));
+    const addedIds = new Set(this.props.userSearchAddedIds);
+    const results: UserSearchViewItem[] = users.map((user) => ({
+      ...user,
+      inChat: chatUserIds.has(user.id),
+      added: addedIds.has(user.id),
+    }));
+    this.setProps({
+      userSearchResults: results,
+      userSearchQuery: query,
+    });
+  }
+
+  private async _addUserIdToChat(userId: number) {
     const chatId = this.props.activeChatId;
     if (!chatId) {
       return;
     }
-    const login = window.prompt('Логин пользователя');
-    if (!login) {
-      return;
-    }
-    const response = await safeRequest(() => searchUser(login), 'search user');
-    if (!response || this._handleAuth(response)) return;
-    if (!isSuccessful(response, 'search user')) return;
-    const users = JSON.parse(response.responseText) as UserSearchResult[];
-    const user = users.find((item) => item.login === login) ?? users[0];
-    if (!user) {
-      console.error('user not found');
-      return;
-    }
     const addResponse = await safeRequest(
-      () => addUsersToChat(chatId, [user.id]),
+      () => addUsersToChat(chatId, [userId]),
       'add users to chat',
     );
     if (!addResponse || this._handleAuth(addResponse)) return;
     if (!isSuccessful(addResponse, 'add users')) return;
+    const addedIds = new Set(this.props.userSearchAddedIds);
+    addedIds.add(userId);
     await this._loadChatUsers(chatId);
+    this._refreshSearchResults(Array.from(addedIds));
   }
 
-  private async _removeUserFromChat() {
+  private _refreshSearchResults(addedIds: number[]) {
+    const chatUserIds = new Set(this.props.chatUsers.map((user) => user.id));
+    const added = new Set(addedIds);
+    const results = this.props.userSearchResults.map((user) => ({
+      ...user,
+      inChat: chatUserIds.has(user.id),
+      added: added.has(user.id),
+    }));
+    this.setProps({
+      userSearchResults: results,
+      userSearchAddedIds: addedIds,
+    });
+  }
+
+  private async _removeUserFromChat(userId: number) {
     const chatId = this.props.activeChatId;
     if (!chatId) {
       return;
     }
-    const activeUser = this.props.activeChatUser;
-    if (!activeUser) {
+    const shouldRemove = window.confirm('Удалить пользователя из чата?');
+    if (!shouldRemove) {
       return;
     }
     const removeResponse = await safeRequest(
-      () => removeUsersFromChat(chatId, [activeUser.id]),
+      () => removeUsersFromChat(chatId, [userId]),
       'remove users from chat',
     );
     if (!removeResponse || this._handleAuth(removeResponse)) return;
     if (!isSuccessful(removeResponse, 'remove users')) return;
     await this._loadChatUsers(chatId);
+  }
+
+  private async _deleteActiveChat() {
+    const chatId = this.props.activeChatId;
+    if (!chatId) {
+      return;
+    }
+    const shouldDelete = window.confirm('Удалить чат?');
+    if (!shouldDelete) {
+      return;
+    }
+    const response = await safeRequest(() => deleteChat(chatId), 'delete chat');
+    if (!response || this._handleAuth(response)) return;
+    if (!isSuccessful(response, 'delete chat')) return;
+    await this._loadChats();
+    this.setProps({
+      activeChatId: null,
+      activeChat: null,
+      messages: [],
+      chatUsers: [],
+      activeChatUser: null,
+      isUserModalOpen: false,
+      userSearchQuery: '',
+      userSearchResults: [],
+      userSearchAddedIds: [],
+    });
+    this._closeSocket();
+    window.history.pushState({}, '', '/messenger');
   }
 
   private _setActiveChat(chatId: number, options: { syncUrl: boolean }) {
@@ -371,6 +504,10 @@ export default class ChatPage extends Block<ChatPageProps> {
       messages: [],
       chatUsers: [],
       activeChatUser: null,
+      isUserModalOpen: false,
+      userSearchQuery: '',
+      userSearchResults: [],
+      userSearchAddedIds: [],
     });
     if (activeChat) {
       void this._connectToChat(chatId);
@@ -529,6 +666,9 @@ export default class ChatPage extends Block<ChatPageProps> {
       chatUsers: users,
       activeChatUser: this._selectActiveChatUser(users),
     });
+    if (this.props.userSearchResults.length) {
+      this._refreshSearchResults(this.props.userSearchAddedIds);
+    }
   }
 
   private async _loadChatFiles(chatId: number) {

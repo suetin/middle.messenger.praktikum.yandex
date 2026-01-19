@@ -1,0 +1,62 @@
+<div
+  class="chat-user-modal {{#if isUserModalOpen}}chat-user-modal--open{{/if}}"
+  data-user-modal
+  aria-hidden="{{#if isUserModalOpen}}false{{else}}true{{/if}}"
+>
+  <div class="chat-user-modal__dialog" role="dialog" aria-modal="true">
+    <header class="chat-user-modal__header">
+      <h2 class="chat-user-modal__title">Добавить пользователя</h2>
+      <button
+        class="chat-user-modal__close"
+        type="button"
+        aria-label="Закрыть"
+        data-user-modal-close
+      >
+        ✕
+      </button>
+    </header>
+    <form class="chat-user-modal__form" data-user-search-form>
+      <input
+        class="chat-user-modal__input"
+        type="text"
+        name="user-search"
+        placeholder="Логин пользователя"
+        value="{{ userSearchQuery }}"
+        autocomplete="off"
+      />
+      <button class="chat-user-modal__search" type="submit">Найти</button>
+    </form>
+    <div class="chat-user-modal__results">
+      {{#if userSearchResults.length}}
+      <ul class="chat-user-modal__list">
+        {{#each userSearchResults}}
+        <li class="chat-user-modal__item">
+          <span class="chat-user-modal__name">{{ chatUserName this }}</span>
+          {{#if added}}
+          <span class="chat-user-modal__status">Добавлено</span>
+          {{else}}
+          {{#if inChat}}
+          <span class="chat-user-modal__status">В чате</span>
+          {{else}}
+          <button
+            class="chat-user-modal__add"
+            type="button"
+            data-add-user-id="{{ id }}"
+          >
+            Добавить
+          </button>
+          {{/if}}
+          {{/if}}
+        </li>
+        {{/each}}
+      </ul>
+      {{else}}
+      {{#if userSearchQuery}}
+      <div class="chat-user-modal__empty">Ничего не найдено</div>
+      {{else}}
+      <div class="chat-user-modal__empty">Введите логин для поиска</div>
+      {{/if}}
+      {{/if}}
+    </div>
+  </div>
+</div>
