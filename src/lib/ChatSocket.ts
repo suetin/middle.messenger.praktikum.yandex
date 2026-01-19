@@ -1,3 +1,5 @@
+import { WS_BASE_URL } from '../api/base';
+
 type ChatSocketHandlers = {
   onOpen?: () => void;
   onClose?: () => void;
@@ -10,8 +12,6 @@ type ChatSocketParams = {
   chatId: number;
   token: string;
 };
-
-const WS_BASE_URL = 'wss://ya-praktikum.tech/ws/chats';
 
 export default class ChatSocket {
   private _socket: WebSocket | null = null;

@@ -7,6 +7,7 @@ import Input from '../components/Input';
 import Button from '../components/Button';
 import { createHandleBlur, validateAndDisplayErrors } from '../lib/validationHandlers';
 import type { InputsMap } from '../lib/validationHandlers';
+import { BASE_URL } from '../api/base';
 
 const data = {
   fields: [
@@ -19,7 +20,6 @@ const data = {
   ],
 };
 
-const BASE_URL = 'https://ya-praktikum.tech/api/v2';
 const authApi = new HTTPTransport();
 
 export default class RegisterPage extends Block {

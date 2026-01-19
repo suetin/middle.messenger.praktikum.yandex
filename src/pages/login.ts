@@ -7,6 +7,7 @@ import { renderWithComponents } from '../lib/render';
 import loginPageLayout from '../layout/login.hbs?raw';
 import { createHandleBlur, validateAndDisplayErrors } from '../lib/validationHandlers';
 import type { InputsMap } from '../lib/validationHandlers';
+import { BASE_URL } from '../api/base';
 
 const data = {
   fields: [
@@ -15,7 +16,6 @@ const data = {
   ],
 };
 
-const BASE_URL = 'https://ya-praktikum.tech/api/v2';
 const authApi = new HTTPTransport();
 
 export default class LoginPage extends Block {
