@@ -2,6 +2,16 @@
   {{#if activeChat}}
   <header class="chat-content__header">
     <div class="chat-content__info">
+      <div class="chat-content__chat">
+        <button
+          class="chat-content__chat-avatar js-avatar-open-form"
+          type="button"
+          aria-label="Изменить аватар чата"
+        >
+          <img class="avatar avatar--md" src="{{ chatAvatar activeChat.avatar }}" alt="Аватар {{ activeChat.title }}" />
+        </button>
+        <div class="chat-content__chat-meta">
+          <h2 class="chat-content__title">{{ activeChat.title }}</h2>
       {{#if chatUsers.length}}
       <div class="chat-content__participants" aria-label="Участники чата">
         {{#each chatUsers}}
@@ -24,6 +34,8 @@
         {{/each}}
       </div>
       {{/if}}
+        </div>
+      </div>
     </div>
     <div class="chat-content__actions">
       <button class="chat-content__action chat-content__action--left" type="button" data-add-user>
@@ -64,6 +76,7 @@
       <div data-component="send-button"></div>
     </form>
   </footer>
+  {{> avatar-form}}
   {{else}}
   <div class="chat-content__empty">
     <p>Выберите чат</p>

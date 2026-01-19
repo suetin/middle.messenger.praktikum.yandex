@@ -5,6 +5,7 @@ import chatSidebarItem from '../partials/chatSidebarItem.hbs?raw';
 import chatContentPartial from '../partials/chatContent.hbs?raw';
 import chatMessagePartial from '../partials/chatMessage.hbs?raw';
 import chatUsersModalPartial from '../partials/chatUsersModal.hbs?raw';
+import avatarFormPartial from '../partials/avatarForm.hbs?raw';
 import Block from '../lib/Block';
 import type { BlockProps } from '../lib/Block';
 import { handleAuthResponse } from '../lib/apiGuard';
@@ -16,6 +17,7 @@ import { getResourceUrl } from '../lib/resourceUrl';
 import { formatTime } from '../lib/formatters';
 import { isSuccessful, safeRequest } from '../lib/http';
 import { BASE_URL } from '../api/base';
+import { bindAvatarUploadModal } from '../lib/avatarModal';
 import {
   createChat,
   getChatFiles,
@@ -24,6 +26,7 @@ import {
   getChats,
   getUser,
   uploadResource,
+  updateChatAvatar,
   addUsersToChat,
   removeUsersFromChat,
   deleteChat,
@@ -133,6 +136,7 @@ Handlebars.registerPartial('chat-content', chatContentPartial);
 Handlebars.registerPartial('chat-message', chatMessagePartial);
 Handlebars.registerPartial('chat-sidebar-item', chatSidebarItem);
 Handlebars.registerPartial('chat-users-modal', chatUsersModalPartial);
+Handlebars.registerPartial('avatar-form', avatarFormPartial);
 Handlebars.registerHelper('eq', (left: unknown, right: unknown) => left === right);
 Handlebars.registerHelper('formatTime', (value?: string) => formatTime(String(value)));
 Handlebars.registerHelper('chatAvatar', (value?: string | null) => getChatAvatarUrl(value));
@@ -747,7 +751,37 @@ export default class ChatPage extends Block<ChatPageProps> {
     this._initComponents();
     const root = document.createElement('div');
     renderWithComponents(chatLayoutTemplate, this.props, this._components, root);
-    const firstChild = root.firstElementChild;
-    return firstChild instanceof HTMLElement ? firstChild : root;
+    const content = root.firstElementChild instanceof HTMLElement ? root.firstElementChild : root;
+    bindAvatarUploadModal<{ id?: number; avatar?: string | null }>({
+      root: content,
+      label: 'update chat avatar',
+      upload: (file) => {
+        const chatId = this.props.activeChatId;
+        if (!chatId) {
+          return Promise.reject(new Error('chatId is missing'));
+        }
+        return updateChatAvatar(chatId, file);
+      },
+      onAuth: (response) => this._handleAuth(response),
+      invalidFileMessage: 'chat avatar file must be an image',
+      onSuccess: (data) => {
+        const chatId = this.props.activeChatId;
+        if (!chatId) {
+          return;
+        }
+        const updatedId = data.id ?? chatId;
+        const updatedAvatar =
+          typeof data.avatar === 'undefined' ? this.props.activeChat?.avatar ?? null : data.avatar;
+        const chats = this.props.chats.map((chat) =>
+          chat.id === updatedId ? { ...chat, avatar: updatedAvatar } : chat,
+        );
+        const activeChat =
+          this.props.activeChat && this.props.activeChat.id === updatedId
+            ? { ...this.props.activeChat, avatar: updatedAvatar }
+            : this.props.activeChat;
+        this.setProps({ chats, activeChat });
+      },
+    });
+    return content;
   }
 }

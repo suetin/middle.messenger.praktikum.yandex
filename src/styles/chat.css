@@ -162,6 +162,36 @@
   min-width: 0;
 }
 
+.chat-content__chat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-content__chat-avatar {
+  border: none;
+  background-color: transparent;
+  padding: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-content__chat-avatar img {
+  width: 38px;
+  height: 38px;
+}
+
+.chat-content__chat-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
 .chat-content__participants {
   display: flex;
   flex-wrap: nowrap;
@@ -218,6 +248,9 @@
 .chat-content__title {
   margin: 0;
   font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chat-content__status {

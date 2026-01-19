@@ -1,21 +1,37 @@
 import { updateAvatar } from '../api/user';
 import { BASE_URL } from '../api/base';
 import { handleAuthResponse } from './apiGuard';
-import { isSuccessful, safeRequest } from './http';
 import { getResourceUrl } from './resourceUrl';
+import { submitAvatarForm } from './avatarUpload';
 
 type AvatarUpdateHandler = (avatarUrl: string) => void;
 
-const isImageFile = (file: File) => {
-  if (file.type) {
-    return file.type.startsWith('image/');
-  }
-  return /\.(png|jpe?g|gif|webp|svg)$/i.test(file.name);
+type AvatarUploadModalOptions<T> = {
+  root: HTMLElement;
+  label: string;
+  upload: (file: File) => Promise<XMLHttpRequest>;
+  onSuccess: (data: T) => void;
+  onAuth?: (response: XMLHttpRequest) => boolean;
+  openSelector?: string;
+  modalSelector?: string;
+  formSelector?: string;
+  invalidFileMessage?: string;
 };
 
-export function bindAvatarModal(root: HTMLElement, onAvatarUpdated: AvatarUpdateHandler) {
-  const modal = root.querySelector('.js-avatar-modal');
-  const openButton = root.querySelector('.js-avatar-open-form');
+export function bindAvatarUploadModal<T>(options: AvatarUploadModalOptions<T>) {
+  const {
+    root,
+    label,
+    upload,
+    onSuccess,
+    onAuth,
+    openSelector = '.js-avatar-open-form',
+    modalSelector = '.js-avatar-modal',
+    formSelector = 'form.avatar-form',
+    invalidFileMessage,
+  } = options;
+  const modal = root.querySelector(modalSelector);
+  const openButton = root.querySelector(openSelector);
 
   if (!(modal instanceof HTMLElement)) {
     return;
@@ -25,7 +41,7 @@ export function bindAvatarModal(root: HTMLElement, onAvatarUpdated: AvatarUpdate
     modal.classList.remove('avatar-modal--open');
   };
 
-  if (openButton) {
+  if (openButton instanceof HTMLElement) {
     openButton.addEventListener('click', () => {
       modal.classList.toggle('avatar-modal--open');
     });
@@ -37,34 +53,35 @@ export function bindAvatarModal(root: HTMLElement, onAvatarUpdated: AvatarUpdate
     }
   });
 
-  const form = modal.querySelector('form.avatar-form');
+  const form = modal.querySelector(formSelector);
   if (form instanceof HTMLFormElement) {
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
-      const input = form.querySelector('input[type="file"][name="avatar"]') as HTMLInputElement | null;
-      const file = input?.files?.[0];
-      if (!file) {
-        return;
+      const updated = await submitAvatarForm<T>({
+        form,
+        label,
+        upload,
+        onAuth,
+        onSuccess,
+        invalidFileMessage,
+      });
+      if (updated) {
+        closeModal();
       }
-      if (!isImageFile(file)) {
-        console.error('avatar file must be an image');
-        form.reset();
-        return;
-      }
+    });
+  }
+}
 
-      const response = await safeRequest(() => updateAvatar(file), 'update avatar');
-      if (!response || handleAuthResponse(response)) {
-        return;
-      }
-      if (!isSuccessful(response, 'update avatar')) {
-        return;
-      }
-      const data = JSON.parse(response.responseText) as { avatar?: string | null };
+export function bindAvatarModal(root: HTMLElement, onAvatarUpdated: AvatarUpdateHandler) {
+  bindAvatarUploadModal<{ avatar?: string | null }>({
+    root,
+    label: 'update avatar',
+    upload: (file) => updateAvatar(file),
+    onAuth: (response) => handleAuthResponse(response),
+    onSuccess: (data) => {
       if (data.avatar) {
         onAvatarUpdated(getResourceUrl(BASE_URL, data.avatar));
       }
-      form.reset();
-      closeModal();
-    });
-  }
+    },
+  });
 }

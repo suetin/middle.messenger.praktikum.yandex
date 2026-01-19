@@ -63,6 +63,15 @@ export function uploadResource(file: File) {
   });
 }
 
+export function updateChatAvatar(chatId: number, file: File) {
+  const formData = new FormData();
+  formData.append('chatId', String(chatId));
+  formData.append('avatar', file);
+  return chatApi.put(`${BASE_URL}/chats/avatar`, {
+    data: formData,
+  });
+}
+
 export function getUser() {
   return chatApi.get(`${BASE_URL}/auth/user`, {
     headers: { 'Content-Type': 'application/json' },
