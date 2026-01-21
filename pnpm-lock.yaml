@@ -11,9 +11,6 @@ importers:
       handlebars:
         specifier: ^4.7.8
         version: 4.7.8
-      jest:
-        specifier: ^30.2.0
-        version: 30.2.0(@types/node@25.0.9)
     devDependencies:
       '@eslint/js':
         specifier: ^9.39.2
@@ -39,6 +36,9 @@ importers:
       husky:
         specifier: ^9.1.7
         version: 9.1.7
+      jest:
+        specifier: ^30.2.0
+        version: 30.2.0(@types/node@25.0.9)
       jsdom:
         specifier: ^25.0.1
         version: 25.0.1
