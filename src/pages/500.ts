@@ -1,15 +1,20 @@
-import '../styles/style.css';
 import Handlebars from 'handlebars';
 import errorPage from '../partials/serverError.hbs?raw';
+import Block from '../lib/Block';
 
 const template = Handlebars.compile(errorPage);
 
-const appEl = document.getElementById('app');
-if (appEl) {
-  appEl.innerHTML = template({
-    code: '500',
-    message: 'Мы уже фиксим',
-    backUrl: '/chat.html',
-    backText: 'Назад к чатам',
-  });
+export default class ServerErrorPage extends Block {
+  render() {
+    const html = template({
+      code: '500',
+      message: 'Мы уже фиксим',
+      backUrl: '/messenger',
+      backText: 'Назад к чатам',
+    }).trim();
+    const tpl = document.createElement('template');
+    tpl.innerHTML = html;
+    const firstChild = tpl.content.firstElementChild;
+    return firstChild instanceof HTMLElement ? firstChild : '';
+  }
 }

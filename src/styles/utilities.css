@@ -1,0 +1,30 @@
+.text-red {
+  color: var(--chat-danger);
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-sm {
+  font-size: 13px;
+}
+
+.hidden {
+  display: none;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.border-bottom {
+  border-bottom: 1px solid var(--chat-border-grey);
+}
+
+.content-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}

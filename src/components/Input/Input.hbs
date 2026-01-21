@@ -5,7 +5,7 @@
     {{/if}}
     <input
       class="input__field input__field--filled"
-      id="{{name}}"
+      id="{{inputId}}"
       name="{{name}}"
       type="{{inputType}}"
       {{#if value}}value="{{value}}"{{/if}}
@@ -13,11 +13,11 @@
     />
   {{else}}
     {{#if label}}
-      <label class="input__label" for="{{name}}">{{label}}</label>
+      <label class="input__label" for="{{inputId}}">{{label}}</label>
     {{/if}}
     <input
       class="input__field input__field--underline"
-      id="{{name}}"
+      id="{{inputId}}"
       name="{{name}}"
       type="{{inputType}}"
       {{#if value}}value="{{value}}"{{/if}}

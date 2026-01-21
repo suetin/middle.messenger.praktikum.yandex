@@ -1,17 +1,22 @@
 <nav class="chat-app__sidebar sidebar-chat-app" aria-label="Список чатов">
   <header class="sidebar-chat-app__header">
     <div class="sidebar-chat-app__profile-btn-wrapper">
-      <a class="sidebar-chat-app__profile-btn" href="/profile.html">
+      <a class="sidebar-chat-app__profile-btn" href="/settings">
         <span>Профиль</span><img src="/arrow-right.svg" alt="arrow right" />
       </a>
     </div>
+    <button class="sidebar-chat-app__create-btn" type="button" data-create-chat>+ Новый чат</button>
     <form class="sidebar-chat-app__search-form" role="search" aria-label="Поиск чатов">
       <div data-component="chat-search"></div>
     </form>
   </header>
   <ul class="chat-list">
-    {{#each chats}}
-    {{> chat-sidebar-item}}
-    {{/each}}
+    {{#if chats.length}}
+      {{#each chats}}
+      {{> chat-sidebar-item}}
+      {{/each}}
+    {{else}}
+      <li class="chat-list__empty">Пока нет чатов</li>
+    {{/if}}
   </ul>
 </nav>

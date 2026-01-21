@@ -27,9 +27,12 @@ export default class Input extends Block<InputProps> {
   }
 
   private getViewModel() {
-    const { variant = 'underline', type, icon, className, ...rest } = this.props;
+    const { variant = 'underline', type, icon, className, name, ...rest } = this.props;
+    const inputId = `${name}-${this.id}`;
     return {
       ...rest,
+      name,
+      inputId,
       variant,
       isFilled: variant === 'filled',
       inputType: type ?? 'text',

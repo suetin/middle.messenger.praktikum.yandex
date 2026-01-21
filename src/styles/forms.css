@@ -1,0 +1,16 @@
+.form__title {
+  text-align: center;
+}
+
+.form__list-fields {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form__actions {
+  margin-top: 20px;
+}

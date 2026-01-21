@@ -1,0 +1,27 @@
+a {
+  color: var(--chat-link);
+  text-decoration: inherit;
+}
+
+a:hover {
+  color: var(--chat-link-hover);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+#app {
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  box-sizing: border-box;
+}

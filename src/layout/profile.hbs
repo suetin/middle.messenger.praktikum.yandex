@@ -1,6 +1,6 @@
-<main class="chat-app">
+<main class="profile-page">
   {{> back-to}}
-  <div class="chat-app__profile profile">
+  <div class="profile-page__content profile">
     <div class="profile__top">
       <button class="js-avatar-open-form">
         <img
@@ -17,20 +17,20 @@
       {{#each fields}}
       <li class="profile__row">
         <span class="profile__label">{{ label }}</span>
-        <span class="profile__value">{{ value }}</span>
+        <span class="profile__value" data-field="{{ name }}">{{ value }}</span>
       </li>
       {{/each}}
     </ul>
 
     <ul class="profile__list profile__list--actions">
       <li class="profile__row">
-        <a class="button--link" href="/profile-edit.html">Изменить данные</a>
+        <a class="button--link" href="/settings/edit">Изменить данные</a>
       </li>
       <li class="profile__row">
-        <a class="button--link" href="/profile-password.html">Изменить пароль</a>
+        <a class="button--link" href="/settings/password">Изменить пароль</a>
       </li>
       <li class="profile__row">
-        <a href="/" class="text-red">Выйти</a>
+        <a href="/" class="text-red" data-logout>Выйти</a>
       </li>
     </ul>
   </div>
